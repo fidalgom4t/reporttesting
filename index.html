@@ -411,6 +411,17 @@
     <!-- Painel de arquivados -->
     <div id="archivedPanel" class="archived-panel">
       <h4>Itens arquivados</h4>
+
+      <!-- filtro por cliente -->
+      <div style="margin-bottom:8px; display:flex; gap:6px; align-items:center;">
+        <input
+          id="archivedFilter"
+          type="text"
+          placeholder="Filtrar por cliente..."
+          style="flex:1; padding:4px 8px; font-size:11px; border-radius:6px; border:1px solid #d1dde8;"
+        />
+      </div>
+
       <div id="archivedContent"></div>
       <p style="margin:6px 0 0; font-size:11px; color:var(--text-muted);">
         Nota: remover dos arquivados volta a mostrar o item nas listas acima.
@@ -911,12 +922,16 @@
       saveArchivedState();
     }
 
+    // ====================================================
+    // UI ARQUIVADOS AGRUPADA POR CLIENTE
+    // ====================================================
     function updateArchivedUI() {
-      const clients = Object.keys(archived.clients);
-      const programs = Object.keys(archived.programs);
-      const infos = Object.keys(archived.infos);
-      const total = clients.length + programs.length + infos.length;
+      const clientsArchived = Object.keys(archived.clients);
+      const programsArchived = Object.keys(archived.programs); // "CLIENT|PROG"
+      const infosArchived = Object.keys(archived.infos);       // "CLIENT|INFO"
 
+      const total =
+        clientsArchived.length + programsArchived.length + infosArchived.length;
       document.getElementById('archivedCount').textContent = total;
 
       const content = document.getElementById('archivedContent');
@@ -927,58 +942,126 @@
         return;
       }
 
-      if (clients.length) {
-        const group = document.createElement('div');
-        group.className = 'archived-list-group';
-        group.innerHTML = '<strong>Clientes</strong>';
-        const tags = document.createElement('div');
-        tags.className = 'archived-tags';
-        clients.forEach(c => {
-          const tag = document.createElement('span');
-          tag.className = 'tag';
-          tag.innerHTML = `${c} <span title="Desarquivar">×</span>`;
-          tag.querySelector('span').onclick = () => unarchiveClient(c);
-          tags.appendChild(tag);
-        });
-        group.appendChild(tags);
-        content.appendChild(group);
-      }
+      // Agrupar por cliente
+      const grouped = {}; // { CLIENTE: { clientArchived, programs:[], infos:[] } }
 
-      if (programs.length) {
-        const group = document.createElement('div');
-        group.className = 'archived-list-group';
-        group.innerHTML = '<strong>Programas</strong>';
-        const tags = document.createElement('div');
-        tags.className = 'archived-tags';
-        programs.forEach(key => {
-          const [client, program] = key.split('|');
-          const tag = document.createElement('span');
-          tag.className = 'tag';
-          tag.innerHTML = `${client} – ${program} <span title="Desarquivar">×</span>`;
-          tag.querySelector('span').onclick = () => unarchiveProgram(client, program);
-          tags.appendChild(tag);
-        });
-        group.appendChild(tags);
-        content.appendChild(group);
-      }
+      clientsArchived.forEach(c => {
+        if (!grouped[c]) grouped[c] = { clientArchived: false, programs: [], infos: [] };
+        grouped[c].clientArchived = true;
+      });
 
-      if (infos.length) {
-        const group = document.createElement('div');
-        group.className = 'archived-list-group';
-        group.innerHTML = '<strong>Infos</strong>';
-        const tags = document.createElement('div');
-        tags.className = 'archived-tags';
-        infos.forEach(key => {
-          const [client, info] = key.split('|');
-          const tag = document.createElement('span');
-          tag.className = 'tag';
-          tag.innerHTML = `${client} – ${info} <span title="Desarquivar">×</span>`;
-          tag.querySelector('span').onclick = () => unarchiveInfo(client, info);
-          tags.appendChild(tag);
-        });
-        group.appendChild(tags);
-        content.appendChild(group);
-      }
+      programsArchived.forEach(key => {
+        const [client, program] = key.split('|');
+        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
+        if (!grouped[client].programs.includes(program)) {
+          grouped[client].programs.push(program);
+        }
+      });
+
+      infosArchived.forEach(key => {
+        const [client, info] = key.split('|');
+        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
+        if (!grouped[client].infos.includes(info)) {
+          grouped[client].infos.push(info);
+        }
+      });
+
+      // Filtro por cliente
+      const filterInput = document.getElementById('archivedFilter');
+      const term = (filterInput?.value || '').trim().toLowerCase();
+
+      const sortedClients = Object.keys(grouped).sort((a, b) =>
+        a.localeCompare(b, 'pt', { sensitivity: 'base' })
+      );
+
+      sortedClients.forEach(client => {
+        if (term && !client.toLowerCase().includes(term)) return;
+
+        const g = grouped[client];
+        const hasPrograms = g.programs.length > 0;
+        const hasInfos = g.infos.length > 0;
+        const hasSomething = g.clientArchived || hasPrograms || hasInfos;
+        if (!hasSomething) return;
+
+        const block = document.createElement('div');
+        block.className = 'archived-list-group';
+        block.style.marginBottom = '8px';
+
+        // Cabeçalho do cliente
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.alignItems = 'center';
+        header.style.justifyContent = 'space-between';
+        header.style.marginBottom = '4px';
+
+        const title = document.createElement('strong');
+        title.style.fontSize = '11px';
+        title.style.textTransform = 'uppercase';
+        title.style.letterSpacing = '0.08em';
+        title.style.color = 'var(--text-muted)';
+        title.textContent = client;
+
+        header.appendChild(title);
+
+        // Cliente inteiro arquivado
+        if (g.clientArchived) {
+          const clientTag = document.createElement('span');
+          clientTag.className = 'tag';
+          clientTag.style.marginLeft = '8px';
+          clientTag.innerHTML = `Cliente arquivado <span title="Desarquivar cliente">×</span>`;
+          clientTag.querySelector('span').onclick = () => unarchiveClient(client);
+          header.appendChild(clientTag);
+        }
+
+        block.appendChild(header);
+
+        // Programas
+        if (hasPrograms) {
+          const labelProg = document.createElement('div');
+          labelProg.style.fontSize = '11px';
+          labelProg.style.color = 'var(--text-muted)';
+          labelProg.textContent = 'Programas:';
+          block.appendChild(labelProg);
+
+          const tagsProg = document.createElement('div');
+          tagsProg.className = 'archived-tags';
+
+          g.programs.forEach(program => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${program} <span title="Desarquivar programa">×</span>`;
+            tag.querySelector('span').onclick = () => unarchiveProgram(client, program);
+            tagsProg.appendChild(tag);
+          });
+
+          block.appendChild(tagsProg);
+        }
+
+        // Infos / Datas
+        if (hasInfos) {
+          const labelInfo = document.createElement('div');
+          labelInfo.style.fontSize = '11px';
+          labelInfo.style.color = 'var(--text-muted)';
+          labelInfo.style.marginTop = '4px';
+          labelInfo.textContent = 'Infos / Datas:';
+          block.appendChild(labelInfo);
+
+          const tagsInfo = document.createElement('div');
+          tagsInfo.className = 'archived-tags';
+
+          g.infos.forEach(info => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${info} <span title="Desarquivar info">×</span>`;
+            tag.querySelector('span').onclick = () => unarchiveInfo(client, info);
+            tagsInfo.appendChild(tag);
+          });
+
+          block.appendChild(tagsInfo);
+        }
+
+        content.appendChild(block);
+      });
     }
 
     function toggleArchivedPanel() {
@@ -987,7 +1070,7 @@
     }
 
     // ====================================================
-    // VER RELATÓRIO  (mantém o contrato antigo com report.html)
+    // VER RELATÓRIO
     // ====================================================
     function applyAndGo() {
       const all = loadFilters();
@@ -1022,6 +1105,11 @@
       document.getElementById('btnSelectAllInfos').onclick = selectAllInfos;
       document.getElementById('btnToggleArchived').onclick = toggleArchivedPanel;
       document.getElementById('viewReport').onclick = applyAndGo;
+
+      const filter = document.getElementById('archivedFilter');
+      if (filter) {
+        filter.addEventListener('input', updateArchivedUI);
+      }
 
       // Fechar painel arquivados ao clicar fora
       document.addEventListener('click', (e) => {
