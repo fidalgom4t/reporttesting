@@ -1004,10 +1004,14 @@
       
       // Carregar Data, Meta e a Blacklist do Google Sheets
       // Se o fetch do Google Sheet falhar (rede ou não configurado), retorna string vazia para não quebrar o report
+      // ADICIONADO: console.log para debugging da URL
+      const sheetUrl = GOOGLE_SHEET_URL.includes('http') ? (GOOGLE_SHEET_URL + '&t=' + Date.now()) : '#';
+      console.log('Tentando carregar CSV de:', sheetUrl);
+
       const [data, meta, csvText] = await Promise.all([
         fetch('data.json').then(r => r.json()),
         fetch('meta.json').then(r => r.json()),
-        fetch(GOOGLE_SHEET_URL.includes('http') ? (GOOGLE_SHEET_URL + '&t=' + Date.now()) : '#')
+        fetch(sheetUrl)
           .then(r => r.ok ? r.text() : '')
           .catch(e => { console.warn('Não foi possível carregar a lista de perguntas ignoradas do Google Sheets'); return ''; })
       ]);
@@ -1018,12 +1022,19 @@
       const hiddenQuestionsList = csvText
         .split('\n')
         .slice(1) // Remove cabeçalho
-        .map(row => row.replace(/\r/g, '').trim()) // Limpa quebras de linha e espaços
+        .map(row => {
+           // Remove CR, trim, e remove aspas extras que o CSV possa adicionar
+           return row.replace(/\r/g, '').trim().replace(/^"|"$/g, '');
+        })
         .filter(Boolean); // Remove vazios
 
       const hiddenSet = new Set(hiddenQuestionsList);
+      
+      // LOGS PARA DEBUGGING NA CONSOLA
       if (hiddenQuestionsList.length > 0) {
-        console.log("Perguntas a esconder:", hiddenQuestionsList);
+        console.log("SUCESSO: Perguntas escondidas carregadas:", hiddenQuestionsList);
+      } else {
+        console.log("AVISO: Nenhuma pergunta escondida carregada. Verifique o link do CSV.");
       }
 
       const root = document.getElementById('report');
