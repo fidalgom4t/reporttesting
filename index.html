@@ -1,1127 +1,1450 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-  <meta charset="UTF-8" />
-  <title>Generate Report</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --primary: #007c91;
-      --primary-soft: #e0f4f7;
-      --bg: #f3f7f9;
-      --card: #ffffff;
-      --border: #dde5ec;
-      --radius: 10px;
-      --shadow-soft: 0 12px 30px rgba(15, 52, 67, 0.08);
-      --text-main: #123047;
-      --text-muted: #6b7a88;
-    }
+  <meta charset="UTF-8" />
+  <title>Generate Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary: #007c91;
+      --primary-soft: #e0f4f7;
+      --bg: #f3f7f9;
+      --card: #ffffff;
+      --border: #dde5ec;
+      --radius: 10px;
+      --shadow-soft: 0 12px 30px rgba(15, 52, 67, 0.08);
+      --text-main: #123047;
+      --text-muted: #6b7a88;
+      --red: #e74c3c;
+    }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
-    body {
-      margin: 0;
-      padding: 32px 16px 40px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #e5f5ff 0, #f5fafc 45%, #f3f7f9 100%);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-    }
+    body {
+      margin: 0;
+      padding: 32px 16px 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #e5f5ff 0, #f5fafc 45%, #f3f7f9 100%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
 
-    .shell {
-      width: 100%;
-      max-width: 1120px;
-    }
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+    }
 
-    header h1 {
-      margin: 0 0 4px;
-      font-size: 26px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 26px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+    }
 
-    header p {
-      margin: 0 0 22px;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
+    header p {
+      margin: 8px 0 22px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 1.1fr;
-      gap: 18px;
-    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1.1fr;
+      gap: 18px;
+    }
 
-    .card {
-      background: var(--card);
-      border-radius: 18px;
-      box-shadow: var(--shadow-soft);
-      padding: 16px 16px 10px;
-      display: flex;
-      flex-direction: column;
-      min-height: 240px;
-      max-height: 300px;
-    }
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow-soft);
+      padding: 16px 16px 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 240px;
+      max-height: 300px;
+    }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
 
-    .card-title {
-      font-size: 13px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--primary);
-    }
+    .card-title {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
 
-    .helper-text {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin: 0 2px 6px;
-    }
+    .helper-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 2px 6px;
+    }
 
-    .list {
-      margin-top: 4px;
-      padding: 4px 4px 4px 0;
-      overflow-y: auto;
-      flex: 1;
-    }
+    .list {
+      margin-top: 4px;
+      padding: 4px 4px 4px 0;
+      overflow-y: auto;
+      flex: 1;
+    }
 
-    .item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      padding: 4px 6px;
-      border-radius: 8px;
-      font-size: 13px;
-    }
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
 
-    .item:hover { background: #f2f7fb; }
+    .item:hover { background: #f2f7fb; }
 
-    .item-main {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex: 1;
-      min-width: 0;
-    }
+    .item-main {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
 
-    .item label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      width: 100%;
-    }
+    .item label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
 
-    .item span.text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .item span.text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-    input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
 
-    .chip-archive {
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      background: #f6fafc;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .chip-archive:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-      background: var(--primary-soft);
-    }
+    .chip-archive {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f6fafc;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .chip-archive:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
 
-    .btn-ghost {
-      border-radius: 999px;
-      border: 1px solid var(--primary-soft);
-      padding: 4px 10px;
-      font-size: 11px;
-      background: #f5fafb;
-      color: var(--primary);
-      cursor: pointer;
-    }
-    .btn-ghost:hover { background: var(--primary-soft); }
+    .btn-ghost {
+      border-radius: 999px;
+      border: 1px solid var(--primary-soft);
+      padding: 4px 10px;
+      font-size: 11px;
+      background: #f5fafb;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-ghost:hover { background: var(--primary-soft); }
 
-    /* Blocos dinâmicos (Formador / Início / Fim / Turmas) */
-    #dynamicBlocks {
-      margin-top: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    /* Blocos dinâmicos (Formador / Início / Fim / Turmas) */
+    #dynamicBlocks {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-    .dynamic-block {
-      background: var(--card);
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-soft);
-      padding: 14px 16px 12px;
-    }
+    .dynamic-block {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 16px 12px;
+    }
 
-    .dynamic-block h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
-      color: var(--primary);
-    }
+    .dynamic-block h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: var(--primary);
+    }
 
-    .dynamic-block h4 {
-      margin: 10px 0 6px;
-      font-size: 13px;
-      color: var(--primary);
-    }
+    .dynamic-block h4 {
+      margin: 10px 0 6px;
+      font-size: 13px;
+      color: var(--primary);
+    }
 
-    .dynamic-block label {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 12px;
-      color: var(--text-main);
-    }
+    .dynamic-block label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text-main);
+    }
 
-    .dynamic-block input[type="text"],
-    .dynamic-block input[type="month"] {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
+    .dynamic-block input[type="text"],
+    .dynamic-block input[type="month"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
 
-    .dynamic-block ol {
-      margin: 0;
-      padding-left: 16px;
-      list-style: none;
-      max-height: 120px;
-      overflow-y: auto;
-    }
+    .dynamic-block ol {
+      margin: 0;
+      padding-left: 16px;
+      list-style: none;
+      max-height: 120px;
+      overflow-y: auto;
+    }
 
-    .dynamic-block ol li {
-      margin-bottom: 4px;
-      font-size: 13px;
-    }
+    .dynamic-block ol li {
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
 
-    .dynamic-block ol label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 0;
-      font-weight: normal;
-    }
+    .dynamic-block ol label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      font-weight: normal;
+    }
 
-    .dynamic-block input[type="checkbox"] { margin-right: 4px; }
+    .dynamic-block input[type="checkbox"] { margin-right: 4px; }
 
-    /* Barra inferior */
-    .footer-bar {
-      margin-top: 18px;
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 999px;
-      box-shadow: 0 10px 26px rgba(15, 52, 67, 0.09);
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    /* Barra inferior */
+    .footer-bar {
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 999px;
+      box-shadow: 0 10px 26px rgba(15, 52, 67, 0.09);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      position: sticky; /* Sticky footer for better UX */
+      bottom: 0;
+      backdrop-filter: blur(5px);
+      z-index: 10;
+    }
 
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    .pill-archived {
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: #f1f6f9;
-      border: 1px solid #d8e4ee;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .pill-archived {
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #f1f6f9;
+      border: 1px solid #d8e4ee;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pill-archived:hover { background: var(--primary-soft); border-color: var(--primary); }
 
-    .badge-count {
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 10px;
-      background: var(--primary-soft);
-      color: var(--primary);
-    }
+    .badge-count {
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
 
-    .btn-primary {
-      border-radius: 999px;
-      padding: 8px 22px;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      background: #9aa4af;
-      color: white;
-    }
-    .btn-primary.enabled {
-      background: var(--primary);
-      box-shadow: 0 8px 18px rgba(0, 124, 145, 0.35);
-    }
-    .btn-primary.enabled:hover { background: #006173; }
+    .btn-primary {
+      border-radius: 999px;
+      padding: 8px 22px;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      background: #9aa4af;
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .btn-primary.enabled {
+      background: var(--primary);
+      box-shadow: 0 8px 18px rgba(0, 124, 145, 0.35);
+    }
+    .btn-primary.enabled:hover { background: #006173; }
 
-    /* Painel arquivados */
-    .archived-panel {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 70px;
-      min-width: 420px;
-      max-width: 620px;
-      background: #ffffff;
-      border-radius: 14px;
-      box-shadow: 0 18px 40px rgba(15, 52, 67, 0.18);
-      padding: 14px 16px 12px;
-      font-size: 12px;
-      color: var(--text-main);
-      display: none;
-    }
-    .archived-panel.visible { display: block; }
+    /* Painel arquivados */
+    .archived-panel {
+      position: fixed; /* Fixed position */
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 70px;
+      min-width: 420px;
+      max-width: 620px;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(15, 52, 67, 0.18);
+      padding: 14px 16px 12px;
+      font-size: 12px;
+      color: var(--text-main);
+      display: none;
+      z-index: 20;
+    }
+    .archived-panel.visible { display: block; }
 
-    .archived-panel h4 {
-      margin: 0 0 6px;
-      font-size: 13px;
-      color: var(--primary);
-    }
+    .archived-panel h4 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: var(--primary);
+    }
 
-    .archived-list-group { margin-bottom: 6px; }
+    .archived-list-group { margin-bottom: 6px; }
 
-    .archived-list-group strong {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
+    .archived-list-group strong {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
 
-    .archived-tags {
-      margin-top: 4px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .archived-tags {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
 
-    .tag {
-      border-radius: 999px;
-      padding: 3px 8px;
-      background: #f3f7fb;
-      border: 1px solid #d9e4f0;
-      font-size: 11px;
-    }
+    .tag {
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #f3f7fb;
+      border: 1px solid #d9e4f0;
+      font-size: 11px;
+    }
 
-    .tag span {
-      margin-left: 4px;
-      cursor: pointer;
-      color: #b23b3b;
-    }
+    .tag span {
+      margin-left: 4px;
+      cursor: pointer;
+      color: var(--red);
+      font-weight: bold;
+    }
 
-    @media (max-width: 960px) {
-      .grid { grid-template-columns: 1fr; }
-      .card { max-height: none; }
-      .archived-panel {
-        position: fixed;
-        left: 12px;
-        right: 12px;
-        transform: none;
-        bottom: 82px;
-        max-width: none;
-      }
-    }
-  </style>
+    /* Custom Modal/Message Box */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      transition: opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .modal-overlay.active .modal-content { transform: translateY(0); opacity: 1; }
+
+    .modal-title {
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .modal-message {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: var(--text-main);
+    }
+
+    .modal-buttons button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin: 0 5px;
+      cursor: pointer;
+      border: 1px solid var(--primary);
+      transition: all 0.2s ease;
+    }
+
+    .modal-confirm-btn {
+      background: var(--primary);
+      color: white;
+    }
+    .modal-confirm-btn:hover { background: #006173; }
+
+    .modal-cancel-btn, .modal-ok-btn {
+      background: white;
+      color: var(--primary);
+    }
+    .modal-cancel-btn:hover, .modal-ok-btn:hover { background: var(--primary-soft); }
+
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .card { max-height: none; }
+      .archived-panel {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        transform: none;
+        bottom: 82px;
+        max-width: none;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="shell">
-    <header>
-      <h1>GENERATE REPORT</h1>
-      <p>
-        Escolhe o cliente, o(s) programa(s) e a informação pretendida. Podes arquivar clientes / programas / infos
-        para manter a lista limpa.
-      </p>
-    </header>
-
-    <div class="grid">
-      <!-- CLIENTES -->
-      <section class="card" id="card-clients">
-        <div class="card-header">
-          <span class="card-title">Cliente</span>
-        </div>
-        <p class="helper-text">Seleciona exatamente um cliente.</p>
-        <div class="list" id="clientList"></div>
-      </section>
-
-      <!-- PROGRAMAS -->
-      <section class="card" id="card-programs">
-        <div class="card-header">
-          <span class="card-title">Programas</span>
-          <button class="btn-ghost" id="btnSelectAllPrograms">Selecionar todos</button>
-        </div>
-        <p class="helper-text">Escolhe um ou mais programas para o cliente selecionado.</p>
-        <div class="list" id="programList"></div>
-      </section>
-
-      <!-- INFOS -->
-      <section class="card" id="card-infos">
-        <div class="card-header">
-          <span class="card-title">Data / Info</span>
-          <button class="btn-ghost" id="btnSelectAllInfos">Selecionar todos</button>
-        </div>
-        <p class="helper-text">Filtra anos, turmas ou outras infos conforme os dados.</p>
-        <div class="list" id="infoList"></div>
-      </section>
-    </div>
-
-    <!-- Blocos dinâmicos por programa -->
-    <div id="dynamicBlocks"></div>
-
-    <!-- Barra inferior -->
-    <div class="footer-bar">
-      <div class="footer-left">
-        <div class="pill-archived">
-          <span>🔒 Arquivados</span>
-          <span id="archivedCount" class="badge-count">0</span>
-        </div>
-        <span id="archivedHelper">Guardado no Apps Script (partilhado entre utilizadores).</span>
-      </div>
-
-      <div style="display:flex; align-items:center; gap:10px;">
-        <button class="btn-ghost" id="btnToggleArchived">Ver arquivados ▾</button>
-        <button id="viewReport" class="btn-primary" disabled>Ver relatório</button>
-      </div>
-    </div>
-
-    <!-- Painel de arquivados -->
-    <div id="archivedPanel" class="archived-panel">
-      <h4>Itens arquivados</h4>
-
-      <!-- filtro por cliente -->
-      <div style="margin-bottom:8px; display:flex; gap:6px; align-items:center;">
-        <input
-          id="archivedFilter"
-          type="text"
-          placeholder="Filtrar por cliente..."
-          style="flex:1; padding:4px 8px; font-size:11px; border-radius:6px; border:1px solid #d1dde8;"
-        />
-      </div>
-
-      <div id="archivedContent"></div>
-      <p style="margin:6px 0 0; font-size:11px; color:var(--text-muted);">
-        Nota: remover dos arquivados volta a mostrar o item nas listas acima.
-      </p>
-    </div>
-  </div>
-
-  <script>
-    // ====================================================
-    // CONFIG: URL do Apps Script (Web App, termina em /exec)
-    // ====================================================
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz54-DuWj1knZ4eoreDANYPOzbtRMqeFtxt1NV2vi3u0QLuDbi4mt66bNOgeSJstWKWJA/exec';
-
-    // ====================================================
-    // ESTADO
-    // ====================================================
-    let data = [];
-    let archived = { clients: {}, programs: {}, infos: {} };
-
-    // Filtros (como no index antigo)
-    function loadFilters() {
-      return JSON.parse(localStorage.getItem('filters') || '{}');
-    }
-    function saveFilters(f) {
-      localStorage.setItem('filters', JSON.stringify(f));
-    }
-    function updateFilter(key, val) {
-      const f = loadFilters();
-      f[key] = val;
-      saveFilters(f);
-    }
-
-    // ====================================================
-    // APPS SCRIPT: GET / SET ARQUIVADOS
-    // ====================================================
-    async function loadArchivedState() {
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('PASTE_')) {
-        console.warn('APPS_SCRIPT_URL ainda não definido. A usar estado arquivado vazio.');
-        return { clients: {}, programs: {}, infos: {} };
-      }
-      try {
-        const res = await fetch(APPS_SCRIPT_URL + '?action=getArchived', { method: 'GET' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const j = await res.json();
-        return {
-          clients: j.clients || {},
-          programs: j.programs || {},
-          infos: j.infos || {}
-        };
-      } catch (err) {
-        console.warn('Erro ao carregar estado arquivado, a usar vazio:', err);
-        return { clients: {}, programs: {}, infos: {} };
-      }
-    }
-
-    async function saveArchivedState() {
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('PASTE_')) return;
-      try {
-        await fetch(APPS_SCRIPT_URL + '?action=setArchived', {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(archived)
-        });
-      } catch (err) {
-        console.warn('Erro ao gravar estado arquivado:', err);
-      }
-    }
-
-    // ====================================================
-    // RENDER LISTAS
-    // ====================================================
-    function getCurrentClient() {
-      const f = loadFilters();
-      return (f.clients || [])[0] || null;
-    }
-
-    function renderClients() {
-      const list = document.getElementById('clientList');
-      list.innerHTML = '';
-
-      const f = loadFilters();
-      const selected = f.clients || [];
-
-      const clients = [...new Set(data.map(r => r.client))].sort();
-
-      clients.forEach(client => {
-        if (archived.clients[client]) return;
-
-        const item = document.createElement('div');
-        item.className = 'item';
-
-        const main = document.createElement('div');
-        main.className = 'item-main';
-
-        const label = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selected.includes(client);
-
-        cb.onchange = () => {
-          const filters = loadFilters();
-          // Apenas um cliente
-          if (cb.checked) {
-            filters.clients = [client];
-          } else {
-            filters.clients = [];
-          }
-          // Quando muda de cliente, limpa programas/infos
-          filters.programs = [];
-          filters.clientInfos = [];
-          saveFilters(filters);
-
-          renderAll();
-        };
-
-        const span = document.createElement('span');
-        span.className = 'text';
-        span.textContent = client;
-
-        label.append(cb, span);
-        main.appendChild(label);
-
-        const archBtn = document.createElement('button');
-        archBtn.className = 'chip-archive';
-        archBtn.textContent = 'Arquivar';
-        archBtn.onclick = () => archiveClient(client);
-
-        item.append(main, archBtn);
-        list.appendChild(item);
-      });
-    }
-
-    function renderPrograms() {
-      const list = document.getElementById('programList');
-      list.innerHTML = '';
-
-      const client = getCurrentClient();
-      if (!client) return;
-
-      const f = loadFilters();
-      const selected = new Set(f.programs || []);
-
-      const programs = [...new Set(
-        data.filter(r => r.client === client).map(r => r.program)
-      )].sort();
-
-      programs.forEach(program => {
-        if (archived.programs[`${client}|${program}`]) return;
-
-        const item = document.createElement('div');
-        item.className = 'item';
-
-        const main = document.createElement('div');
-        main.className = 'item-main';
-
-        const label = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selected.has(program);
-
-        cb.onchange = () => {
-          const filters = loadFilters();
-          const set = new Set(filters.programs || []);
-          if (cb.checked) set.add(program);
-          else set.delete(program);
-          filters.programs = [...set];
-          saveFilters(filters);
-
-          renderInfos();
-          refreshDynamic();
-          updateViewReportButton();
-        };
-
-        const span = document.createElement('span');
-        span.className = 'text';
-        span.textContent = program;
-
-        label.append(cb, span);
-        main.appendChild(label);
-
-        const archBtn = document.createElement('button');
-        archBtn.className = 'chip-archive';
-        archBtn.textContent = 'Arquivar';
-        archBtn.onclick = () => archiveProgram(client, program);
-
-        item.append(main, archBtn);
-        list.appendChild(item);
-      });
-    }
-
-    function renderInfos() {
-      const list = document.getElementById('infoList');
-      list.innerHTML = '';
-
-      const client = getCurrentClient();
-      const f = loadFilters();
-      const programs = f.programs || [];
-      if (!client || !programs.length) return;
-
-      const selected = new Set(f.clientInfos || []);
-
-      const infos = [...new Set(
-        data.filter(r => r.client === client && programs.includes(r.program))
-            .map(r => r.client_info)
-      )].sort();
-
-      infos.forEach(info => {
-        if (archived.infos[`${client}|${info}`]) return;
-
-        const item = document.createElement('div');
-        item.className = 'item';
-
-        const main = document.createElement('div');
-        main.className = 'item-main';
-
-        const label = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selected.has(info);
-
-        cb.onchange = () => {
-          const filters = loadFilters();
-          const set = new Set(filters.clientInfos || []);
-          if (cb.checked) set.add(info);
-          else set.delete(info);
-          filters.clientInfos = [...set];
-          saveFilters(filters);
-
-          refreshDynamic();
-          updateViewReportButton();
-        };
-
-        const span = document.createElement('span');
-        span.className = 'text';
-        span.textContent = info;
-
-        label.append(cb, span);
-        main.appendChild(label);
-
-        const archBtn = document.createElement('button');
-        archBtn.className = 'chip-archive';
-        archBtn.textContent = 'Arquivar';
-        archBtn.onclick = () => archiveInfo(client, info);
-
-        item.append(main, archBtn);
-        list.appendChild(item);
-      });
-    }
-
-    // ====================================================
-    // BOTÕES “Selecionar todos”
-    // ====================================================
-    function selectAllPrograms() {
-      const client = getCurrentClient();
-      if (!client) return;
-
-      const programs = [...new Set(
-        data.filter(r => r.client === client).map(r => r.program)
-      )].sort().filter(p => !archived.programs[`${client}|${p}`]);
-
-      const f = loadFilters();
-      const allSelected = programs.length &&
-        programs.every(p => (f.programs || []).includes(p));
-
-      f.programs = allSelected ? [] : programs;
-      saveFilters(f);
-
-      renderPrograms();
-      renderInfos();
-      refreshDynamic();
-      updateViewReportButton();
-    }
-
-    function selectAllInfos() {
-      const client = getCurrentClient();
-      if (!client) return;
-
-      const f = loadFilters();
-      const programs = f.programs || [];
-      if (!programs.length) return;
-
-      const infos = [...new Set(
-        data.filter(r => r.client === client && programs.includes(r.program))
-            .map(r => r.client_info)
-      )].sort().filter(info => !archived.infos[`${client}|${info}`]);
-
-      const allSelected = infos.length &&
-        infos.every(i => (f.clientInfos || []).includes(i));
-
-      f.clientInfos = allSelected ? [] : infos;
-      saveFilters(f);
-
-      renderInfos();
-      refreshDynamic();
-      updateViewReportButton();
-    }
-
-    // ====================================================
-    // BLOCO DINÂMICO (Formador / Início / Fim / Turmas)
-    // ====================================================
-    function createInputField(labelText, program, key) {
-      const f = loadFilters();
-      const container = document.createElement('div');
-
-      const label = document.createElement('label');
-      label.textContent = labelText;
-      container.appendChild(label);
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = (f[key] || {})[program] || '';
-      input.oninput = (e) => {
-        const filters = loadFilters();
-        filters[key] = filters[key] || {};
-        filters[key][program] = e.target.value;
-        saveFilters(filters);
-      };
-
-      container.appendChild(input);
-      return container;
-    }
-
-    function createMonthField(labelText, program, key) {
-      const f = loadFilters();
-      const container = document.createElement('div');
-
-      const label = document.createElement('label');
-      label.textContent = labelText;
-      container.appendChild(label);
-
-      const input = document.createElement('input');
-      input.type = 'month';
-      input.value = (f[key] || {})[program] || '';
-      input.onchange = (e) => {
-        const filters = loadFilters();
-        filters[key] = filters[key] || {};
-        filters[key][program] = e.target.value;
-        saveFilters(filters);
-      };
-
-      container.appendChild(input);
-      return container;
-    }
-
-    function buildCheckboxGroup(labelText, options, key) {
-      const f = loadFilters();
-      const selected = new Set(f[key] || []);
-
-      const wrapper = document.createElement('div');
-      const title = document.createElement('h4');
-      title.textContent = labelText;
-      wrapper.appendChild(title);
-
-      const list = document.createElement('ol');
-
-      options.forEach(opt => {
-        const li = document.createElement('li');
-        const lab = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = opt;
-        cb.checked = selected.has(opt);
-
-        cb.onchange = () => {
-          const filters = loadFilters();
-          const set = new Set(filters[key] || []);
-          if (cb.checked) set.add(opt);
-          else set.delete(opt);
-          filters[key] = [...set];
-          saveFilters(filters);
-        };
-
-        lab.append(cb, document.createTextNode(opt));
-        li.appendChild(lab);
-        list.appendChild(li);
-      });
-
-      wrapper.appendChild(list);
-      return wrapper;
-    }
-
-    function refreshDynamic() {
-      const f = loadFilters();
-      const client = (f.clients || [])[0];
-      const progs = f.programs || [];
-      const infos = f.clientInfos || [];
-
-      const db = document.getElementById('dynamicBlocks');
-      db.innerHTML = '';
-
-      const btn = document.getElementById('viewReport');
-      const enabled = client && progs.length && infos.length;
-      btn.disabled = !enabled;
-      btn.classList.toggle('enabled', enabled);
-
-      if (!enabled) return;
-
-      progs.forEach(program => {
-        const block = document.createElement('div');
-        block.className = 'dynamic-block';
-
-        const h3 = document.createElement('h3');
-        h3.textContent = `Programa: ${program}`;
-        block.appendChild(h3);
-
-        block.appendChild(createInputField('Formador', program, 'trainers'));
-        block.appendChild(createMonthField('Início', program, 'starts'));
-        block.appendChild(createMonthField('Fim', program, 'ends'));
-
-        // Turmas filtradas por client + programa + infos seleccionadas
-        const turmas = [...new Set(
-          data.filter(d =>
-            d.client === client &&
-            d.program === program &&
-            infos.includes(d.client_info)
-          ).map(d => d.turma)
-        )].sort();
-
-        const key = `turmas_${program}`;
-        block.appendChild(buildCheckboxGroup('Turmas', turmas, key));
-
-        db.appendChild(block);
-      });
-    }
-
-    function updateViewReportButton() {
-      refreshDynamic(); // já trata do botão
-    }
-
-    // ====================================================
-    // ARQUIVAR / DESARQUIVAR
-    // ====================================================
-    function archiveClient(client) {
-      if (!confirm(`Arquivar o cliente "${client}"?`)) return;
-      archived.clients[client] = true;
-
-      // Se for o cliente selecionado, limpa seleção
-      const f = loadFilters();
-      if ((f.clients || [])[0] === client) {
-        f.clients = [];
-        f.programs = [];
-        f.clientInfos = [];
-        saveFilters(f);
-      }
-
-      renderAll();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    function archiveProgram(client, program) {
-      if (!confirm(`Arquivar o programa "${program}" para o cliente "${client}"?`)) return;
-      archived.programs[`${client}|${program}`] = true;
-
-      const f = loadFilters();
-      f.programs = (f.programs || []).filter(p => p !== program);
-      saveFilters(f);
-
-      renderPrograms();
-      renderInfos();
-      refreshDynamic();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    function archiveInfo(client, info) {
-      if (!confirm(`Arquivar a info "${info}" para o cliente "${client}"?`)) return;
-      archived.infos[`${client}|${info}`] = true;
-
-      const f = loadFilters();
-      f.clientInfos = (f.clientInfos || []).filter(i => i !== info);
-      saveFilters(f);
-
-      renderInfos();
-      refreshDynamic();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    function unarchiveClient(client) {
-      delete archived.clients[client];
-      renderAll();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    function unarchiveProgram(client, program) {
-      delete archived.programs[`${client}|${program}`];
-      renderPrograms();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    function unarchiveInfo(client, info) {
-      delete archived.infos[`${client}|${info}`];
-      renderInfos();
-      updateArchivedUI();
-      saveArchivedState();
-    }
-
-    // ====================================================
-    // UI ARQUIVADOS AGRUPADA POR CLIENTE
-    // ====================================================
-    function updateArchivedUI() {
-      const clientsArchived = Object.keys(archived.clients);
-      const programsArchived = Object.keys(archived.programs); // "CLIENT|PROG"
-      const infosArchived = Object.keys(archived.infos);       // "CLIENT|INFO"
-
-      const total =
-        clientsArchived.length + programsArchived.length + infosArchived.length;
-      document.getElementById('archivedCount').textContent = total;
-
-      const content = document.getElementById('archivedContent');
-      content.innerHTML = '';
-
-      if (total === 0) {
-        content.textContent = 'Nenhum item arquivado.';
-        return;
-      }
-
-      // Agrupar por cliente
-      const grouped = {}; // { CLIENTE: { clientArchived, programs:[], infos:[] } }
-
-      clientsArchived.forEach(c => {
-        if (!grouped[c]) grouped[c] = { clientArchived: false, programs: [], infos: [] };
-        grouped[c].clientArchived = true;
-      });
-
-      programsArchived.forEach(key => {
-        const [client, program] = key.split('|');
-        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
-        if (!grouped[client].programs.includes(program)) {
-          grouped[client].programs.push(program);
-        }
-      });
-
-      infosArchived.forEach(key => {
-        const [client, info] = key.split('|');
-        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
-        if (!grouped[client].infos.includes(info)) {
-          grouped[client].infos.push(info);
-        }
-      });
-
-      // Filtro por cliente
-      const filterInput = document.getElementById('archivedFilter');
-      const term = (filterInput?.value || '').trim().toLowerCase();
-
-      const sortedClients = Object.keys(grouped).sort((a, b) =>
-        a.localeCompare(b, 'pt', { sensitivity: 'base' })
-      );
-
-      sortedClients.forEach(client => {
-        if (term && !client.toLowerCase().includes(term)) return;
-
-        const g = grouped[client];
-        const hasPrograms = g.programs.length > 0;
-        const hasInfos = g.infos.length > 0;
-        const hasSomething = g.clientArchived || hasPrograms || hasInfos;
-        if (!hasSomething) return;
-
-        const block = document.createElement('div');
-        block.className = 'archived-list-group';
-        block.style.marginBottom = '8px';
-
-        // Cabeçalho do cliente
-        const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.alignItems = 'center';
-        header.style.justifyContent = 'space-between';
-        header.style.marginBottom = '4px';
-
-        const title = document.createElement('strong');
-        title.style.fontSize = '11px';
-        title.style.textTransform = 'uppercase';
-        title.style.letterSpacing = '0.08em';
-        title.style.color = 'var(--text-muted)';
-        title.textContent = client;
-
-        header.appendChild(title);
-
-        // Cliente inteiro arquivado
-        if (g.clientArchived) {
-          const clientTag = document.createElement('span');
-          clientTag.className = 'tag';
-          clientTag.style.marginLeft = '8px';
-          clientTag.innerHTML = `Cliente arquivado <span title="Desarquivar cliente">×</span>`;
-          clientTag.querySelector('span').onclick = () => unarchiveClient(client);
-          header.appendChild(clientTag);
-        }
-
-        block.appendChild(header);
-
-        // Programas
-        if (hasPrograms) {
-          const labelProg = document.createElement('div');
-          labelProg.style.fontSize = '11px';
-          labelProg.style.color = 'var(--text-muted)';
-          labelProg.textContent = 'Programas:';
-          block.appendChild(labelProg);
-
-          const tagsProg = document.createElement('div');
-          tagsProg.className = 'archived-tags';
-
-          g.programs.forEach(program => {
-            const tag = document.createElement('span');
-            tag.className = 'tag';
-            tag.innerHTML = `${program} <span title="Desarquivar programa">×</span>`;
-            tag.querySelector('span').onclick = () => unarchiveProgram(client, program);
-            tagsProg.appendChild(tag);
-          });
-
-          block.appendChild(tagsProg);
-        }
-
-        // Infos / Datas
-        if (hasInfos) {
-          const labelInfo = document.createElement('div');
-          labelInfo.style.fontSize = '11px';
-          labelInfo.style.color = 'var(--text-muted)';
-          labelInfo.style.marginTop = '4px';
-          labelInfo.textContent = 'Infos / Datas:';
-          block.appendChild(labelInfo);
-
-          const tagsInfo = document.createElement('div');
-          tagsInfo.className = 'archived-tags';
-
-          g.infos.forEach(info => {
-            const tag = document.createElement('span');
-            tag.className = 'tag';
-            tag.innerHTML = `${info} <span title="Desarquivar info">×</span>`;
-            tag.querySelector('span').onclick = () => unarchiveInfo(client, info);
-            tagsInfo.appendChild(tag);
-          });
-
-          block.appendChild(tagsInfo);
-        }
-
-        content.appendChild(block);
-      });
-    }
-
-    function toggleArchivedPanel() {
-      const panel = document.getElementById('archivedPanel');
-      panel.classList.toggle('visible');
-    }
-
-    // ====================================================
-    // VER RELATÓRIO
-    // ====================================================
-    function applyAndGo() {
-      const all = loadFilters();
-      localStorage.setItem('reportFilters', JSON.stringify(all));
-      window.location.href = 'report.html';
-    }
-
-    // ====================================================
-    // INIT
-    // ====================================================
-    function renderAll() {
-      renderClients();
-      renderPrograms();
-      renderInfos();
-      refreshDynamic();
-    }
-
-    async function init() {
-      try {
-        data = await fetch('data.json').then(r => r.json());
-      } catch (err) {
-        console.error(err);
-        alert('Erro a carregar data.json');
-        return;
-      }
-
-      archived = await loadArchivedState();
-      renderAll();
-      updateArchivedUI();
-
-      document.getElementById('btnSelectAllPrograms').onclick = selectAllPrograms;
-      document.getElementById('btnSelectAllInfos').onclick = selectAllInfos;
-      document.getElementById('btnToggleArchived').onclick = toggleArchivedPanel;
-      document.getElementById('viewReport').onclick = applyAndGo;
-
-      const filter = document.getElementById('archivedFilter');
-      if (filter) {
-        filter.addEventListener('input', updateArchivedUI);
-      }
-
-      // Fechar painel arquivados ao clicar fora
-      document.addEventListener('click', (e) => {
-        const panel = document.getElementById('archivedPanel');
-        if (!panel.classList.contains('visible')) return;
-        if (!panel.contains(e.target) && !document.getElementById('btnToggleArchived').contains(e.target)) {
-          panel.classList.remove('visible');
-        }
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', init);
-  </script>
+  <div class="shell">
+    <header>
+      <h1>GENERATE REPORT</h1>
+      <p>
+        Escolhe o cliente, o(s) programa(s) e a informação pretendida. Podes arquivar clientes / programas / infos
+        para manter a lista limpa.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- CLIENTES -->
+      <section class="card" id="card-clients">
+        <div class="card-header">
+          <span class="card-title">Cliente</span>
+        </div>
+        <p class="helper-text">Seleciona exatamente um cliente.</p>
+        <div class="list" id="clientList"></div>
+      </section>
+
+      <!-- PROGRAMAS -->
+      <section class="card" id="card-programs">
+        <div class="card-header">
+          <span class="card-title">Programas</span>
+          <button class="btn-ghost" id="btnSelectAllPrograms">Selecionar todos</button>
+        </div>
+        <p class="helper-text">Escolhe um ou mais programas para o cliente selecionado.</p>
+        <div class="list" id="programList"></div>
+      </section>
+
+      <!-- INFOS -->
+      <section class="card" id="card-infos">
+        <div class="card-header">
+          <span class="card-title">Data / Info</span>
+          <button class="btn-ghost" id="btnSelectAllInfos">Selecionar todos</button>
+        </div>
+        <p class="helper-text">Filtra anos, turmas ou outras infos conforme os dados.</p>
+        <div class="list" id="infoList"></div>
+      </section>
+    </div>
+
+    <!-- Blocos dinâmicos por programa -->
+    <div id="dynamicBlocks"></div>
+
+    <!-- Barra inferior -->
+    <div class="footer-bar">
+      <div class="footer-left">
+        <div class="pill-archived" id="btnToggleArchivedPill">
+          <span>🔒 Arquivados</span>
+          <span id="archivedCount" class="badge-count">0</span>
+        </div>
+        <span id="archivedHelper">Guardado no Apps Script (partilhado entre utilizadores).</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn-ghost" id="btnToggleArchived">Ver arquivados ▾</button>
+        <button id="viewReport" class="btn-primary" disabled>Ver relatório</button>
+      </div>
+    </div>
+
+    <!-- Painel de arquivados -->
+    <div id="archivedPanel" class="archived-panel">
+      <h4>Itens arquivados</h4>
+
+      <!-- filtro por cliente -->
+      <div style="margin-bottom:8px; display:flex; gap:6px; align-items:center;">
+        <input
+          id="archivedFilter"
+          type="text"
+          placeholder="Filtrar por cliente..."
+          style="flex:1; padding:4px 8px; font-size:11px; border-radius:6px; border:1px solid #d1dde8;"
+        />
+      </div>
+
+      <div id="archivedContent"></div>
+      <p style="margin:6px 0 0; font-size:11px; color:var(--text-muted);">
+        Nota: remover dos arquivados volta a mostrar o item nas listas acima.
+      </p>
+    </div>
+
+    <!-- Custom Modal UI (Confirmação e Mensagem) -->
+    <div id="customModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-message" id="modalMessage"></div>
+        <div class="modal-buttons" id="modalButtons"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ====================================================
+    // CUSTOM MODAL (Substitui alert() e confirm())
+    // ====================================================
+
+    // Função principal para mostrar o modal
+    function showModal(title, message, type, onConfirm) {
+      const modal = document.getElementById('customModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+      const modalButtons = document.getElementById('modalButtons');
+
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+      modalButtons.innerHTML = '';
+
+      if (type === 'confirm') {
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'modal-confirm-btn';
+        confirmBtn.textContent = 'Sim, Arquivar';
+        confirmBtn.onclick = () => {
+          onConfirm(true);
+          modal.classList.remove('active');
+        };
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'modal-cancel-btn';
+        cancelBtn.textContent = 'Cancelar';
+        cancelBtn.onclick = () => {
+          onConfirm(false);
+          modal.classList.remove('active');
+        };
+
+        modalButtons.append(cancelBtn, confirmBtn);
+      } else { // 'alert' or 'message'
+        const okBtn = document.createElement('button');
+        okBtn.className = 'modal-ok-btn';
+        okBtn.textContent = 'OK';
+        okBtn.onclick = () => modal.classList.remove('active');
+        modalButtons.appendChild(okBtn);
+      }
+
+      // Timeout para garantir que o modal aparece acima da barra de rodapé (z-index)
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
+    }
+
+    // Helpers
+    function customAlert(title, message) {
+      showModal(title, message, 'alert');
+    }
+
+    function customConfirm(title, message, callback) {
+      showModal(title, message, 'confirm', callback);
+    }
+
+
+    // ====================================================
+    // CONFIG: URL do Apps Script (Web App, termina em /exec)
+    // É usado para guardar o estado de arquivado de forma partilhada.
+    // ====================================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz54-DuWj1knZ4eoreDANYPOzbtRMqeFtxt1NV2vi3u0QLuDbi4mt66bNOgeSJstWKWJA/exec';
+
+    // ====================================================
+    // NOVO: CONFIGURAÇÃO DE CSV DINÂMICO
+    // ====================================================
+    // Insira aqui o URL do ficheiro CSV publicado (File > Share > Publish to web > CSV)
+    // Se deixar vazio, serão usadas as perguntas padrão abaixo.
+    const IGNORED_QUESTIONS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQugAUvNS81Ey6C4jjgFAjgGpDyrvnKsEFdnmywCG5NU6faRPm9_XPiZBTtTyYzQPLNr7LK2F2SOz2O/pubhtml?gid=289711789&single=true'; 
+
+    // ====================================================
+    // CONSTANTES DE FILTRAGEM (PERGUNTAS A IGNORAR)
+    // ====================================================
+    // Lista padrão (fallback) caso o CSV não esteja configurado ou falhe
+    let PERGUNTAS_IGNORADAS = [
+      'Carimbo de data/hora',
+      'Nome de utilizador',
+      'Endereço de email',
+      'Pontuação'
+    ];
+
+    // ====================================================
+    // ESTADO
+    // ====================================================
+    let data = [];
+    let archived = { clients: {}, programs: {}, infos: {} };
+
+    // Filtros (como no index antigo)
+    function loadFilters() {
+      return JSON.parse(localStorage.getItem('filters') || '{}');
+    }
+    function saveFilters(f) {
+      localStorage.setItem('filters', JSON.stringify(f));
+    }
+    function updateFilter(key, val) {
+      const f = loadFilters();
+      f[key] = val;
+      saveFilters(f);
+    }
+
+    // ====================================================
+    // CARREGAR LISTA IGNORADA DO CSV
+    // ====================================================
+    async function loadIgnoredQuestions() {
+      if (!IGNORED_QUESTIONS_CSV_URL || IGNORED_QUESTIONS_CSV_URL.trim() === '') {
+        console.log('CSV URL de perguntas ignoradas não definido. A usar defaults.');
+        return;
+      }
+      
+      try {
+        const res = await fetch(IGNORED_QUESTIONS_CSV_URL);
+        if (!res.ok) throw new Error('Falha ao aceder ao CSV: ' + res.status);
+        const text = await res.text();
+        
+        // Assume que cada linha é uma pergunta a ignorar
+        const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+        
+        if (lines.length > 0) {
+          PERGUNTAS_IGNORADAS = lines;
+          console.log('Perguntas ignoradas atualizadas via CSV:', PERGUNTAS_IGNORADAS);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar CSV de perguntas ignoradas (mantendo defaults):', err);
+      }
+    }
+
+    // ====================================================
+    // APPS SCRIPT: GET / SET ARQUIVADOS
+    // ====================================================
+    async function loadArchivedState() {
+      // Adicionando uma verificação robusta se a URL não for válida
+      const isValidUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('http');
+
+      if (!isValidUrl) {
+        console.warn('APPS_SCRIPT_URL inválida ou não definida. A usar estado arquivado vazio.');
+        return { clients: {}, programs: {}, infos: {} };
+      }
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + '?action=getArchived', { method: 'GET' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        return {
+          clients: j.clients || {},
+          programs: j.programs || {},
+          infos: j.infos || {}
+        };
+      } catch (err) {
+        console.warn('Erro ao carregar estado arquivado, a usar vazio:', err);
+        // Apenas mostra a mensagem de erro se a URL for válida (para não incomodar se for placeholder)
+        customAlert('Erro de Comunicação', 'Não foi possível carregar o estado de arquivados do Apps Script. A utilizar listas completas (não arquivadas).');
+        return { clients: {}, programs: {}, infos: {} };
+      }
+    }
+
+    async function saveArchivedState() {
+      const isValidUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('http');
+      if (!isValidUrl) return;
+
+      try {
+        await fetch(APPS_SCRIPT_URL + '?action=setArchived', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(archived)
+        });
+      } catch (err) {
+        console.warn('Erro ao gravar estado arquivado:', err);
+        customAlert('Erro de Gravação', 'Não foi possível guardar o estado de arquivados no Apps Script.');
+      }
+    }
+
+    // ====================================================
+    // RENDER LISTAS
+    // ====================================================
+    function getCurrentClient() {
+      const f = loadFilters();
+      return (f.clients || [])[0] || null;
+    }
+
+    function renderClients() {
+      const list = document.getElementById('clientList');
+      list.innerHTML = '';
+
+      const f = loadFilters();
+      const selected = f.clients || [];
+
+      const clients = [...new Set(data.map(r => r.client))].sort();
+
+      clients.forEach(client => {
+        if (archived.clients[client]) return;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const main = document.createElement('div');
+        main.className = 'item-main';
+
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selected.includes(client);
+
+        cb.onchange = () => {
+          const filters = loadFilters();
+          // Apenas um cliente
+          if (cb.checked) {
+            filters.clients = [client];
+          } else {
+            filters.clients = [];
+          }
+          // Quando muda de cliente, limpa programas/infos
+          filters.programs = [];
+          filters.clientInfos = [];
+          // Limpa todos os filtros dinâmicos que dependem do cliente (turmas, etc.)
+          for (const key in filters) {
+            if (key.startsWith('turmas_') || key === 'trainers' || key === 'starts' || key === 'ends') {
+              delete filters[key];
+            }
+          }
+          saveFilters(filters);
+
+          renderAll();
+        };
+
+        const span = document.createElement('span');
+        span.className = 'text';
+        span.textContent = client;
+
+        label.append(cb, span);
+        main.appendChild(label);
+
+        const archBtn = document.createElement('button');
+        archBtn.className = 'chip-archive';
+        archBtn.textContent = 'Arquivar';
+        archBtn.onclick = () => archiveClient(client);
+
+        item.append(main, archBtn);
+        list.appendChild(item);
+      });
+    }
+
+    function renderPrograms() {
+      const list = document.getElementById('programList');
+      list.innerHTML = '';
+
+      const client = getCurrentClient();
+      if (!client) return;
+
+      const f = loadFilters();
+      const selected = new Set(f.programs || []);
+
+      const programs = [...new Set(
+        data.filter(r => r.client === client).map(r => r.program)
+      )].sort();
+
+      programs.forEach(program => {
+        if (archived.programs[`${client}|${program}`]) return;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const main = document.createElement('div');
+        main.className = 'item-main';
+
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selected.has(program);
+
+        cb.onchange = () => {
+          const filters = loadFilters();
+          const set = new Set(filters.programs || []);
+          if (cb.checked) set.add(program);
+          else {
+            set.delete(program);
+            // Limpar filtros dinâmicos específicos do programa desmarcado
+            delete filters[`turmas_${program}`];
+            if (filters.trainers) delete filters.trainers[program];
+            if (filters.starts) delete filters.starts[program];
+            if (filters.ends) delete filters.ends[program];
+          }
+          filters.programs = [...set];
+          saveFilters(filters);
+
+          renderInfos();
+          refreshDynamic();
+          updateViewReportButton();
+        };
+
+        const span = document.createElement('span');
+        span.className = 'text';
+        span.textContent = program;
+
+        label.append(cb, span);
+        main.appendChild(label);
+
+        const archBtn = document.createElement('button');
+        archBtn.className = 'chip-archive';
+        archBtn.textContent = 'Arquivar';
+        archBtn.onclick = () => archiveProgram(client, program);
+
+        item.append(main, archBtn);
+        list.appendChild(item);
+      });
+    }
+
+    function renderInfos() {
+      const list = document.getElementById('infoList');
+      list.innerHTML = '';
+
+      const client = getCurrentClient();
+      const f = loadFilters();
+      const programs = f.programs || [];
+      if (!client || !programs.length) return;
+
+      const selected = new Set(f.clientInfos || []);
+
+      const infos = [...new Set(
+        data.filter(r => r.client === client && programs.includes(r.program))
+            .map(r => r.client_info)
+      )].sort();
+
+      infos.forEach(info => {
+        // Verifica se está arquivada OU se é uma das perguntas ignoradas
+        if (archived.infos[`${client}|${info}`] || PERGUNTAS_IGNORADAS.includes(info)) return;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const main = document.createElement('div');
+        main.className = 'item-main';
+
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selected.has(info);
+
+        cb.onchange = () => {
+          const filters = loadFilters();
+          const set = new Set(filters.clientInfos || []);
+          if (cb.checked) set.add(info);
+          else set.delete(info);
+          filters.clientInfos = [...set];
+          saveFilters(filters);
+
+          refreshDynamic();
+          updateViewReportButton();
+        };
+
+        const span = document.createElement('span');
+        span.className = 'text';
+        span.textContent = info;
+
+        label.append(cb, span);
+        main.appendChild(label);
+
+        const archBtn = document.createElement('button');
+        archBtn.className = 'chip-archive';
+        archBtn.textContent = 'Arquivar';
+        archBtn.onclick = () => archiveInfo(client, info);
+
+        item.append(main, archBtn);
+        list.appendChild(item);
+      });
+    }
+
+    // ====================================================
+    // BOTÕES “Selecionar todos”
+    // ====================================================
+    function selectAllPrograms() {
+      const client = getCurrentClient();
+      if (!client) return;
+
+      const programs = [...new Set(
+        data.filter(r => r.client === client).map(r => r.program)
+      )].sort().filter(p => !archived.programs[`${client}|${p}`]);
+
+      const f = loadFilters();
+      const allSelected = programs.length &&
+        programs.every(p => (f.programs || []).includes(p));
+
+      // Se já estiverem todos selecionados, desmarca. Senão, marca todos.
+      f.programs = allSelected ? [] : programs;
+
+      // Se desmarcar todos, limpa também os filtros dinâmicos associados
+      if (allSelected) {
+        for (const program of programs) {
+          delete f[`turmas_${program}`];
+          if (f.trainers) delete f.trainers[program];
+          if (f.starts) delete f.starts[program];
+          if (f.ends) delete f.ends[program];
+        }
+      }
+
+      saveFilters(f);
+
+      renderPrograms();
+      renderInfos();
+      refreshDynamic();
+      updateViewReportButton();
+    }
+
+    function selectAllInfos() {
+      const client = getCurrentClient();
+      if (!client) return;
+
+      const f = loadFilters();
+      const programs = f.programs || [];
+      if (!programs.length) return;
+
+      // Filtra também as PERGUNTAS_IGNORADAS para não serem selecionadas
+      const infos = [...new Set(
+        data.filter(r => r.client === client && programs.includes(r.program))
+            .map(r => r.client_info)
+      )].sort().filter(info =>
+        !archived.infos[`${client}|${info}`] &&
+        !PERGUNTAS_IGNORADAS.includes(info)
+      );
+
+      const allSelected = infos.length &&
+        infos.every(i => (f.clientInfos || []).includes(i));
+
+      f.clientInfos = allSelected ? [] : infos;
+      saveFilters(f);
+
+      renderInfos();
+      refreshDynamic();
+      updateViewReportButton();
+    }
+
+    // ====================================================
+    // BLOCO DINÂMICO (Formador / Início / Fim / Turmas)
+    // ====================================================
+    function createInputField(labelText, program, key) {
+      const f = loadFilters();
+      const container = document.createElement('div');
+
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      container.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      // Garante que o objeto existe no filtro antes de tentar aceder à propriedade
+      input.value = (f[key] && f[key][program]) || '';
+      input.oninput = (e) => {
+        const filters = loadFilters();
+        filters[key] = filters[key] || {};
+        filters[key][program] = e.target.value;
+        saveFilters(filters);
+      };
+
+      container.appendChild(input);
+      return container;
+    }
+
+    function createMonthField(labelText, program, key) {
+      const f = loadFilters();
+      const container = document.createElement('div');
+
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      container.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'month';
+      input.value = (f[key] && f[key][program]) || '';
+      input.onchange = (e) => {
+        const filters = loadFilters();
+        filters[key] = filters[key] || {};
+        filters[key][program] = e.target.value;
+        saveFilters(filters);
+      };
+
+      container.appendChild(input);
+      return container;
+    }
+
+    function buildCheckboxGroup(labelText, options, key) {
+      const f = loadFilters();
+      const selected = new Set(f[key] || []);
+
+      const wrapper = document.createElement('div');
+      const title = document.createElement('h4');
+      title.textContent = labelText;
+      wrapper.appendChild(title);
+
+      const list = document.createElement('ol');
+
+      // Se não houver turmas, mostra uma mensagem
+      if (options.length === 0) {
+        const p = document.createElement('p');
+        p.style.fontSize = '12px';
+        p.style.color = 'var(--red)';
+        p.style.paddingLeft = '16px';
+        p.textContent = 'Sem turmas para esta seleção de Info/Data.';
+        wrapper.appendChild(p);
+        return wrapper;
+      }
+
+      options.forEach(opt => {
+        const li = document.createElement('li');
+        const lab = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = opt;
+        cb.checked = selected.has(opt);
+
+        cb.onchange = () => {
+          const filters = loadFilters();
+          const set = new Set(filters[key] || []);
+          if (cb.checked) set.add(opt);
+          else set.delete(opt);
+          filters[key] = [...set];
+          saveFilters(filters);
+        };
+
+        lab.append(cb, document.createTextNode(opt));
+        li.appendChild(lab);
+        list.appendChild(li);
+      });
+
+      wrapper.appendChild(list);
+      return wrapper;
+    }
+
+    function refreshDynamic() {
+      const f = loadFilters();
+      const client = (f.clients || [])[0];
+      const progs = f.programs || [];
+      const infos = f.clientInfos || [];
+
+      const db = document.getElementById('dynamicBlocks');
+      db.innerHTML = '';
+
+      const btn = document.getElementById('viewReport');
+      const enabled = client && progs.length && infos.length;
+      btn.disabled = !enabled;
+      btn.classList.toggle('enabled', enabled);
+
+      if (!enabled) return;
+
+      progs.forEach(program => {
+        const block = document.createElement('div');
+        block.className = 'dynamic-block';
+
+        const h3 = document.createElement('h3');
+        h3.textContent = `Programa: ${program}`;
+        block.appendChild(h3);
+
+        block.appendChild(createInputField('Formador', program, 'trainers'));
+        block.appendChild(createMonthField('Início', program, 'starts'));
+        block.appendChild(createMonthField('Fim', program, 'ends'));
+
+        // Turmas filtradas por client + programa + infos seleccionadas
+        const turmas = [...new Set(
+          data.filter(d =>
+            d.client === client &&
+            d.program === program &&
+            infos.includes(d.client_info)
+          ).map(d => d.turma)
+        )].sort();
+
+        const key = `turmas_${program}`;
+        block.appendChild(buildCheckboxGroup('Turmas', turmas, key));
+
+        db.appendChild(block);
+      });
+    }
+
+    function updateViewReportButton() {
+      refreshDynamic(); // já trata do botão
+    }
+
+    // ====================================================
+    // ARQUIVAR / DESARQUIVAR
+    // ====================================================
+    function archiveClient(client) {
+      customConfirm(
+        'Confirmação de Arquivamento',
+        `Tem a certeza que deseja arquivar o cliente "${client}"? Ele será escondido das listas.`,
+        (confirmed) => {
+          if (!confirmed) return;
+
+          archived.clients[client] = true;
+
+          // Se for o cliente selecionado, limpa seleção
+          const f = loadFilters();
+          if ((f.clients || [])[0] === client) {
+            f.clients = [];
+            f.programs = [];
+            f.clientInfos = [];
+            saveFilters(f);
+          }
+
+          renderAll();
+          updateArchivedUI();
+          saveArchivedState();
+        }
+      );
+    }
+
+    function archiveProgram(client, program) {
+      customConfirm(
+        'Confirmação de Arquivamento',
+        `Tem a certeza que deseja arquivar o programa "${program}" para o cliente "${client}"?`,
+        (confirmed) => {
+          if (!confirmed) return;
+
+          archived.programs[`${client}|${program}`] = true;
+
+          const f = loadFilters();
+          f.programs = (f.programs || []).filter(p => p !== program);
+          saveFilters(f);
+
+          renderPrograms();
+          renderInfos();
+          refreshDynamic();
+          updateArchivedUI();
+          saveArchivedState();
+        }
+      );
+    }
+
+    function archiveInfo(client, info) {
+      customConfirm(
+        'Confirmação de Arquivamento',
+        `Tem a certeza que deseja arquivar a info "${info}" para o cliente "${client}"?`,
+        (confirmed) => {
+          if (!confirmed) return;
+
+          archived.infos[`${client}|${info}`] = true;
+
+          const f = loadFilters();
+          f.clientInfos = (f.clientInfos || []).filter(i => i !== info);
+          saveFilters(f);
+
+          renderInfos();
+          refreshDynamic();
+          updateArchivedUI();
+          saveArchivedState();
+        }
+      );
+    }
+
+    function unarchiveClient(client) {
+      delete archived.clients[client];
+      renderAll();
+      updateArchivedUI();
+      saveArchivedState();
+    }
+
+    function unarchiveProgram(client, program) {
+      delete archived.programs[`${client}|${program}`];
+      renderPrograms();
+      updateArchivedUI();
+      saveArchivedState();
+    }
+
+    function unarchiveInfo(client, info) {
+      delete archived.infos[`${client}|${info}`];
+      renderInfos();
+      updateArchivedUI();
+      saveArchivedState();
+    }
+
+    // ====================================================
+    // UI ARQUIVADOS AGRUPADA POR CLIENTE
+    // ====================================================
+    function updateArchivedUI() {
+      const clientsArchived = Object.keys(archived.clients);
+      const programsArchived = Object.keys(archived.programs); // "CLIENT|PROG"
+      const infosArchived = Object.keys(archived.infos);       // "CLIENT|INFO"
+
+      const total =
+        clientsArchived.length + programsArchived.length + infosArchived.length;
+      document.getElementById('archivedCount').textContent = total;
+
+      const content = document.getElementById('archivedContent');
+      content.innerHTML = '';
+
+      if (total === 0) {
+        content.textContent = 'Nenhum item arquivado.';
+        return;
+      }
+
+      // Agrupar por cliente
+      const grouped = {}; // { CLIENTE: { clientArchived, programs:[], infos:[] } }
+
+      clientsArchived.forEach(c => {
+        if (!grouped[c]) grouped[c] = { clientArchived: false, programs: [], infos: [] };
+        grouped[c].clientArchived = true;
+      });
+
+      programsArchived.forEach(key => {
+        const [client, program] = key.split('|');
+        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
+        if (!grouped[client].programs.includes(program)) {
+          grouped[client].programs.push(program);
+        }
+      });
+
+      infosArchived.forEach(key => {
+        const [client, info] = key.split('|');
+        if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
+        if (!grouped[client].infos.includes(info)) {
+          grouped[client].infos.push(info);
+        }
+      });
+
+      // Filtro por cliente
+      const filterInput = document.getElementById('archivedFilter');
+      const term = (filterInput?.value || '').trim().toLowerCase();
+
+      const sortedClients = Object.keys(grouped).sort((a, b) =>
+        a.localeCompare(b, 'pt', { sensitivity: 'base' })
+      );
+
+      sortedClients.forEach(client => {
+        if (term && !client.toLowerCase().includes(term)) return;
+
+        const g = grouped[client];
+        const hasPrograms = g.programs.length > 0;
+        const hasInfos = g.infos.length > 0;
+        const hasSomething = g.clientArchived || hasPrograms || hasInfos;
+        if (!hasSomething) return;
+
+        const block = document.createElement('div');
+        block.className = 'archived-list-group';
+        block.style.marginBottom = '8px';
+
+        // Cabeçalho do cliente
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.alignItems = 'center';
+        header.style.justifyContent = 'space-between';
+        header.style.marginBottom = '4px';
+
+        const title = document.createElement('strong');
+        title.style.fontSize = '11px';
+        title.style.textTransform = 'uppercase';
+        title.style.letterSpacing = '0.08em';
+        title.style.color = 'var(--text-muted)';
+        title.textContent = client;
+
+        header.appendChild(title);
+
+        // Cliente inteiro arquivado
+        if (g.clientArchived) {
+          const clientTag = document.createElement('span');
+          clientTag.className = 'tag';
+          clientTag.style.marginLeft = '8px';
+          clientTag.innerHTML = `Cliente arquivado <span title="Desarquivar cliente">×</span>`;
+          clientTag.querySelector('span').onclick = () => unarchiveClient(client);
+          header.appendChild(clientTag);
+        }
+
+        block.appendChild(header);
+
+        // Programas
+        if (hasPrograms) {
+          const labelProg = document.createElement('div');
+          labelProg.style.fontSize = '11px';
+          labelProg.style.color = 'var(--text-muted)';
+          labelProg.textContent = 'Programas:';
+          block.appendChild(labelProg);
+
+          const tagsProg = document.createElement('div');
+          tagsProg.className = 'archived-tags';
+
+          g.programs.forEach(program => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${program} <span title="Desarquivar programa">×</span>`;
+            tag.querySelector('span').onclick = () => unarchiveProgram(client, program);
+            tagsProg.appendChild(tag);
+          });
+
+          block.appendChild(tagsProg);
+        }
+
+        // Infos / Datas
+        if (hasInfos) {
+          const labelInfo = document.createElement('div');
+          labelInfo.style.fontSize = '11px';
+          labelInfo.style.color = 'var(--text-muted)';
+          labelInfo.style.marginTop = '4px';
+          labelInfo.textContent = 'Infos / Datas:';
+          block.appendChild(labelInfo);
+
+          const tagsInfo = document.createElement('div');
+          tagsInfo.className = 'archived-tags';
+
+          g.infos.forEach(info => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${info} <span title="Desarquivar info">×</span>`;
+            tag.querySelector('span').onclick = () => unarchiveInfo(client, info);
+            tagsInfo.appendChild(tag);
+          });
+
+          block.appendChild(tagsInfo);
+        }
+
+        content.appendChild(block);
+      });
+    }
+
+    function toggleArchivedPanel() {
+      const panel = document.getElementById('archivedPanel');
+      panel.classList.toggle('visible');
+    }
+
+    // ====================================================
+    // VER RELATÓRIO
+    // ====================================================
+    function applyAndGo() {
+      const all = loadFilters();
+      
+      // --- LÓGICA DE LIMPEZA (SANITIZATION) ---
+      
+      // 1. Remover perguntas explicitamente ignoradas
+      if (all.clientInfos && Array.isArray(all.clientInfos)) {
+        all.clientInfos = all.clientInfos.filter(info => 
+          !PERGUNTAS_IGNORADAS.includes(info)
+        );
+      }
+
+      // 2. Remover turmas, formadores e datas de programas que não estão ativos
+      const activePrograms = all.programs || [];
+      
+      // Limpar chaves 'turmas_PROGRAMA' órfãs
+      Object.keys(all).forEach(key => {
+        if (key.startsWith('turmas_')) {
+          const prog = key.replace('turmas_', '');
+          if (!activePrograms.includes(prog)) {
+            delete all[key];
+          }
+        }
+      });
+
+      // Limpar campos aninhados de formadores/datas
+      ['trainers', 'starts', 'ends'].forEach(field => {
+        if (all[field]) {
+          Object.keys(all[field]).forEach(prog => {
+            if (!activePrograms.includes(prog)) {
+              delete all[field][prog];
+            }
+          });
+        }
+      });
+
+      // Guarda a versão limpa
+      localStorage.setItem('reportFilters', JSON.stringify(all));
+      
+      customAlert(
+        'Filtros Prontos',
+        'Os filtros foram limpos (perguntas ignoradas removidas) e guardados em localStorage ("reportFilters"). O próximo passo seria o redirecionamento para o report.html.'
+      );
+    }
+
+    // ====================================================
+    // INIT
+    // ====================================================
+    function renderAll() {
+      renderClients();
+      renderPrograms();
+      renderInfos();
+      refreshDynamic();
+    }
+
+    async function init() {
+      // Carregar lista de perguntas ignoradas via CSV (se configurado)
+      await loadIgnoredQuestions();
+
+      // 1. Carregar data.json
+      try {
+        const response = await fetch('data.json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        data = await response.json();
+      } catch (err) {
+        console.error('Erro a carregar data.json:', err);
+        customAlert('Erro de Carregamento', 'Não foi possível carregar o ficheiro de dados (data.json). Verifique o caminho ou o conteúdo.');
+        return;
+      }
+
+      // 2. Carregar estado arquivado
+      archived = await loadArchivedState();
+      
+      // 3. Renderizar UI
+      renderAll();
+      updateArchivedUI();
+
+      // 4. Adicionar Listeners
+      document.getElementById('btnSelectAllPrograms').onclick = selectAllPrograms;
+      document.getElementById('btnSelectAllInfos').onclick = selectAllInfos;
+      
+      // Toggle do painel de arquivados por ambos os botões
+      document.getElementById('btnToggleArchived').onclick = toggleArchivedPanel;
+      document.getElementById('btnToggleArchivedPill').onclick = toggleArchivedPanel;
+      
+      document.getElementById('viewReport').onclick = applyAndGo;
+
+      const filter = document.getElementById('archivedFilter');
+      if (filter) {
+        filter.addEventListener('input', updateArchivedUI);
+      }
+
+      // Fechar painel arquivados ao clicar fora
+      document.addEventListener('click', (e) => {
+        const panel = document.getElementById('archivedPanel');
+        const toggleBtn = document.getElementById('btnToggleArchived');
+        const togglePill = document.getElementById('btnToggleArchivedPill');
+
+        if (!panel.classList.contains('visible')) return;
+        
+        // Verifica se o clique foi fora do painel E fora dos botões de toggle
+        if (!panel.contains(e.target) && !toggleBtn.contains(e.target) && !togglePill.contains(e.target)) {
+          panel.classList.remove('visible');
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>
