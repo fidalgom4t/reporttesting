@@ -246,7 +246,7 @@
       gap: 12px;
       font-size: 12px;
       color: var(--text-muted);
-      position: sticky; /* Sticky footer for better UX */
+      position: sticky;
       bottom: 0;
       backdrop-filter: blur(5px);
       z-index: 10;
@@ -297,7 +297,7 @@
 
     /* Painel arquivados */
     .archived-panel {
-      position: fixed; /* Fixed position */
+      position: fixed;
       left: 50%;
       transform: translateX(-50%);
       bottom: 70px;
@@ -526,7 +526,6 @@
     // CUSTOM MODAL (Substitui alert() e confirm())
     // ====================================================
 
-    // Função principal para mostrar o modal
     function showModal(title, message, type, onConfirm) {
       const modal = document.getElementById('customModal');
       const modalTitle = document.getElementById('modalTitle');
@@ -555,7 +554,7 @@
         };
 
         modalButtons.append(cancelBtn, confirmBtn);
-      } else { // 'alert' or 'message'
+      } else {
         const okBtn = document.createElement('button');
         okBtn.className = 'modal-ok-btn';
         okBtn.textContent = 'OK';
@@ -563,13 +562,11 @@
         modalButtons.appendChild(okBtn);
       }
 
-      // Timeout para garantir que o modal aparece acima da barra de rodapé (z-index)
       setTimeout(() => {
         modal.classList.add('active');
       }, 10);
     }
 
-    // Helpers
     function customAlert(title, message) {
       showModal(title, message, 'alert');
     }
@@ -578,10 +575,8 @@
       showModal(title, message, 'confirm', callback);
     }
 
-
     // ====================================================
-    // CONFIG: URL do Apps Script (Web App, termina em /exec)
-    // É usado para guardar o estado de arquivado de forma partilhada.
+    // CONFIG: URL do Apps Script
     // ====================================================
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz54-DuWj1knZ4eoreDANYPOzbtRMqeFtxt1NV2vi3u0QLuDbi4mt66bNOgeSJstWKWJA/exec';
 
@@ -592,7 +587,7 @@
 
     // ⚠️ TROCAR SEU_SHEET_ID_AQUI PELO ID DA TUA GOOGLE SHEET
     const IGNORE_SHEET_URL =
-      'https://docs.google.com/spreadsheets/d/1g2lbCnewCwGHcwEBev-9n4y-CqK8fc2u7eAzXq0ViDU/gviz/tq?sheet=IGNORAR_PERGUNTAS&range=A2:A';
+      'https://docs.google.com/spreadsheets/d/1_qerJ1KMP-I_NHznb4xavecZ3Kb1ql1mf2bWD8ONcTfp4rCuK27KNStU/gviz/tq?sheet=IGNORAR_PERGUNTAS&range=A2:A';
 
     // ====================================================
     // ESTADO
@@ -600,24 +595,17 @@
     let data = [];
     let archived = { clients: {}, programs: {}, infos: {} };
 
-    // Filtros (como no index antigo)
     function loadFilters() {
       return JSON.parse(localStorage.getItem('filters') || '{}');
     }
     function saveFilters(f) {
       localStorage.setItem('filters', JSON.stringify(f));
     }
-    function updateFilter(key, val) {
-      const f = loadFilters();
-      f[key] = val;
-      saveFilters(f);
-    }
 
     // ====================================================
     // APPS SCRIPT: GET / SET ARQUIVADOS
     // ====================================================
     async function loadArchivedState() {
-      // Adicionando uma verificação robusta se a URL não for válida
       const isValidUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('http');
 
       if (!isValidUrl) {
@@ -635,7 +623,6 @@
         };
       } catch (err) {
         console.warn('Erro ao carregar estado arquivado, a usar vazio:', err);
-        // Apenas mostra a mensagem de erro se a URL for válida (para não incomodar se for placeholder)
         customAlert('Erro de Comunicação', 'Não foi possível carregar o estado de arquivados do Apps Script. A utilizar listas completas (não arquivadas).');
         return { clients: {}, programs: {}, infos: {} };
       }
@@ -658,7 +645,7 @@
     }
 
     // ====================================================
-    // GOOGLE SHEETS: CARREGAR PERGUNTAS A IGNORAR (sem Apps Script)
+    // GOOGLE SHEETS: CARREGAR PERGUNTAS A IGNORAR
     // ====================================================
     async function loadIgnoredQuestionsFromSheet() {
       if (!IGNORE_SHEET_URL) {
@@ -671,8 +658,6 @@
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const text = await res.text();
-
-        // A resposta gviz vem como "google.visualization.Query.setResponse({...});"
         const jsonStart = text.indexOf('{');
         const jsonEnd = text.lastIndexOf('}');
         if (jsonStart === -1 || jsonEnd === -1) {
@@ -691,8 +676,6 @@
         return list;
       } catch (err) {
         console.warn('Erro a carregar perguntas a ignorar da Google Sheet:', err);
-        // Se quiseres, podes mostrar alerta aqui
-        // customAlert('Aviso', 'Não foi possível carregar a lista de perguntas a ignorar da Google Sheet.');
         return [];
       }
     }
@@ -730,16 +713,13 @@
 
         cb.onchange = () => {
           const filters = loadFilters();
-          // Apenas um cliente
           if (cb.checked) {
             filters.clients = [client];
           } else {
             filters.clients = [];
           }
-          // Quando muda de cliente, limpa programas/infos
           filters.programs = [];
           filters.clientInfos = [];
-          // Limpa todos os filtros dinâmicos que dependem do cliente (turmas, etc.)
           for (const key in filters) {
             if (key.startsWith('turmas_') || key === 'trainers' || key === 'starts' || key === 'ends') {
               delete filters[key];
@@ -801,7 +781,6 @@
           if (cb.checked) set.add(program);
           else {
             set.delete(program);
-            // Limpar filtros dinâmicos específicos do programa desmarcado
             delete filters[`turmas_${program}`];
             if (filters.trainers) delete filters.trainers[program];
             if (filters.starts) delete filters.starts[program];
@@ -849,7 +828,6 @@
       )].sort();
 
       infos.forEach(info => {
-        // Verifica se está arquivada OU se é uma das perguntas ignoradas
         if (archived.infos[`${client}|${info}`] || PERGUNTAS_IGNORADAS.includes(info)) return;
 
         const item = document.createElement('div');
@@ -907,10 +885,8 @@
       const allSelected = programs.length &&
         programs.every(p => (f.programs || []).includes(p));
 
-      // Se já estiverem todos selecionados, desmarca. Senão, marca todos.
       f.programs = allSelected ? [] : programs;
 
-      // Se desmarcar todos, limpa também os filtros dinâmicos associados
       if (allSelected) {
         for (const program of programs) {
           delete f[`turmas_${program}`];
@@ -936,7 +912,6 @@
       const programs = f.programs || [];
       if (!programs.length) return;
 
-      // Filtra também as PERGUNTAS_IGNORADAS para não serem selecionadas
       const infos = [...new Set(
         data.filter(r => r.client === client && programs.includes(r.program))
             .map(r => r.client_info)
@@ -957,7 +932,7 @@
     }
 
     // ====================================================
-    // BLOCO DINÂMICO (Formador / Início / Fim / Turmas)
+    // BLOCO DINÂMICO
     // ====================================================
     function createInputField(labelText, program, key) {
       const f = loadFilters();
@@ -969,7 +944,6 @@
 
       const input = document.createElement('input');
       input.type = 'text';
-      // Garante que o objeto existe no filtro antes de tentar aceder à propriedade
       input.value = (f[key] && f[key][program]) || '';
       input.oninput = (e) => {
         const filters = loadFilters();
@@ -1015,7 +989,6 @@
 
       const list = document.createElement('ol');
 
-      // Se não houver turmas, mostra uma mensagem
       if (options.length === 0) {
         const p = document.createElement('p');
         p.style.fontSize = '12px';
@@ -1080,7 +1053,6 @@
         block.appendChild(createMonthField('Início', program, 'starts'));
         block.appendChild(createMonthField('Fim', program, 'ends'));
 
-        // Turmas filtradas por client + programa + infos seleccionadas
         const turmas = [...new Set(
           data.filter(d =>
             d.client === client &&
@@ -1097,7 +1069,7 @@
     }
 
     function updateViewReportButton() {
-      refreshDynamic(); // já trata do botão
+      refreshDynamic();
     }
 
     // ====================================================
@@ -1112,7 +1084,6 @@
 
           archived.clients[client] = true;
 
-          // Se for o cliente selecionado, limpa seleção
           const f = loadFilters();
           if ((f.clients || [])[0] === client) {
             f.clients = [];
@@ -1193,12 +1164,12 @@
     }
 
     // ====================================================
-    // UI ARQUIVADOS AGRUPADA POR CLIENTE
+    // UI ARQUIVADOS
     // ====================================================
     function updateArchivedUI() {
       const clientsArchived = Object.keys(archived.clients);
-      const programsArchived = Object.keys(archived.programs); // "CLIENT|PROG"
-      const infosArchived = Object.keys(archived.infos);       // "CLIENT|INFO"
+      const programsArchived = Object.keys(archived.programs);
+      const infosArchived = Object.keys(archived.infos);
 
       const total =
         clientsArchived.length + programsArchived.length + infosArchived.length;
@@ -1212,8 +1183,7 @@
         return;
       }
 
-      // Agrupar por cliente
-      const grouped = {}; // { CLIENTE: { clientArchived, programs:[], infos:[] } }
+      const grouped = {};
 
       clientsArchived.forEach(c => {
         if (!grouped[c]) grouped[c] = { clientArchived: false, programs: [], infos: [] };
@@ -1236,7 +1206,6 @@
         }
       });
 
-      // Filtro por cliente
       const filterInput = document.getElementById('archivedFilter');
       const term = (filterInput?.value || '').trim().toLowerCase();
 
@@ -1257,7 +1226,6 @@
         block.className = 'archived-list-group';
         block.style.marginBottom = '8px';
 
-        // Cabeçalho do cliente
         const header = document.createElement('div');
         header.style.display = 'flex';
         header.style.alignItems = 'center';
@@ -1273,7 +1241,6 @@
 
         header.appendChild(title);
 
-        // Cliente inteiro arquivado
         if (g.clientArchived) {
           const clientTag = document.createElement('span');
           clientTag.className = 'tag';
@@ -1285,7 +1252,6 @@
 
         block.appendChild(header);
 
-        // Programas
         if (hasPrograms) {
           const labelProg = document.createElement('div');
           labelProg.style.fontSize = '11px';
@@ -1307,7 +1273,6 @@
           block.appendChild(tagsProg);
         }
 
-        // Infos / Datas
         if (hasInfos) {
           const labelInfo = document.createElement('div');
           labelInfo.style.fontSize = '11px';
@@ -1344,20 +1309,17 @@
     // ====================================================
     function applyAndGo() {
       const all = loadFilters();
-      
-      // --- LÓGICA DE LIMPEZA (SANITIZATION) ---
-      
+
       // 1. Remover perguntas explicitamente ignoradas
       if (all.clientInfos && Array.isArray(all.clientInfos)) {
-        all.clientInfos = all.clientInfos.filter(info => 
+        all.clientInfos = all.clientInfos.filter(info =>
           !PERGUNTAS_IGNORADAS.includes(info)
         );
       }
 
-      // 2. Remover turmas, formadores e datas de programas que não estão ativos
+      // 2. Remover turmas, formadores e datas de programas inativos
       const activePrograms = all.programs || [];
-      
-      // Limpar chaves 'turmas_PROGRAMA' órfãs
+
       Object.keys(all).forEach(key => {
         if (key.startsWith('turmas_')) {
           const prog = key.replace('turmas_', '');
@@ -1367,7 +1329,6 @@
         }
       });
 
-      // Limpar campos aninhados de formadores/datas
       ['trainers', 'starts', 'ends'].forEach(field => {
         if (all[field]) {
           Object.keys(all[field]).forEach(prog => {
@@ -1378,13 +1339,11 @@
         }
       });
 
-      // Guarda a versão limpa
+      // 3. Guardar filtros limpos
       localStorage.setItem('reportFilters', JSON.stringify(all));
-      
-      customAlert(
-        'Filtros Prontos',
-        'Os filtros foram limpos (incluindo perguntas ignoradas) e guardados em localStorage ("reportFilters"). O próximo passo seria o redirecionamento para o report.html.'
-      );
+
+      // 4. Redirecionar para o relatório
+      window.location.href = 'report.html';
     }
 
     // ====================================================
@@ -1398,7 +1357,6 @@
     }
 
     async function init() {
-      // 1. Carregar data.json
       try {
         const response = await fetch('data.json');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -1409,25 +1367,19 @@
         return;
       }
 
-      // 2. Carregar estado arquivado
       archived = await loadArchivedState();
-      
-      // 3. Carregar lista dinâmica de perguntas a ignorar (Google Sheets)
       PERGUNTAS_IGNORADAS = await loadIgnoredQuestionsFromSheet();
       console.log('PERGUNTAS_IGNORADAS carregadas da Sheet:', PERGUNTAS_IGNORADAS);
-      
-      // 4. Renderizar UI
+
       renderAll();
       updateArchivedUI();
 
-      // 5. Adicionar Listeners
       document.getElementById('btnSelectAllPrograms').onclick = selectAllPrograms;
       document.getElementById('btnSelectAllInfos').onclick = selectAllInfos;
-      
-      // Toggle do painel de arquivados por ambos os botões
+
       document.getElementById('btnToggleArchived').onclick = toggleArchivedPanel;
       document.getElementById('btnToggleArchivedPill').onclick = toggleArchivedPanel;
-      
+
       document.getElementById('viewReport').onclick = applyAndGo;
 
       const filter = document.getElementById('archivedFilter');
@@ -1435,15 +1387,12 @@
         filter.addEventListener('input', updateArchivedUI);
       }
 
-      // Fechar painel arquivados ao clicar fora
       document.addEventListener('click', (e) => {
         const panel = document.getElementById('archivedPanel');
         const toggleBtn = document.getElementById('btnToggleArchived');
         const togglePill = document.getElementById('btnToggleArchivedPill');
 
         if (!panel.classList.contains('visible')) return;
-        
-        // Verifica se o clique foi fora do painel E fora dos botões de toggle
         if (!panel.contains(e.target) && !toggleBtn.contains(e.target) && !togglePill.contains(e.target)) {
           panel.classList.remove('visible');
         }
