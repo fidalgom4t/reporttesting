@@ -237,6 +237,10 @@
 
   <script>
     /* ======================== CONFIG ======================== */
+    // ⬇️⬇️⬇️ COLA O TEU LINK DO GOOGLE SHEET (CSV) AQUI ⬇️⬇️⬇️
+    const GOOGLE_SHEET_URL = 'COLA_AQUI_O_TEU_LINK_DO_GOOGLE_SHEETS_CSV';
+    // ⬆️⬆️⬆️ ------------------------------------------- ⬆️⬆️⬆️
+
     const LOCKED_PROGRAMS = ['colab365'];
     const TEXT_BOX_MAX_HEIGHT = 360;
 
@@ -997,11 +1001,31 @@
 
     async function build() {
       const f = JSON.parse(localStorage.getItem('reportFilters') || '{}');
-      const [data, meta] = await Promise.all([
+      
+      // Carregar Data, Meta e a Blacklist do Google Sheets
+      // Se o fetch do Google Sheet falhar (rede ou não configurado), retorna string vazia para não quebrar o report
+      const [data, meta, csvText] = await Promise.all([
         fetch('data.json').then(r => r.json()),
-        fetch('meta.json').then(r => r.json())
+        fetch('meta.json').then(r => r.json()),
+        fetch(GOOGLE_SHEET_URL.includes('http') ? (GOOGLE_SHEET_URL + '&t=' + Date.now()) : '#')
+          .then(r => r.ok ? r.text() : '')
+          .catch(e => { console.warn('Não foi possível carregar a lista de perguntas ignoradas do Google Sheets'); return ''; })
       ]);
+
       const LM = createLabelMap(meta.labels), OM = createSortMap(meta.labels);
+
+      // Processar a lista de perguntas a esconder vinda do CSV
+      const hiddenQuestionsList = csvText
+        .split('\n')
+        .slice(1) // Remove cabeçalho
+        .map(row => row.replace(/\r/g, '').trim()) // Limpa quebras de linha e espaços
+        .filter(Boolean); // Remove vazios
+
+      const hiddenSet = new Set(hiddenQuestionsList);
+      if (hiddenQuestionsList.length > 0) {
+        console.log("Perguntas a esconder:", hiddenQuestionsList);
+      }
+
       const root = document.getElementById('report');
       root.innerHTML = '';
       window.__chartCtx = {};
@@ -1022,11 +1046,15 @@
 
         // filtrar linhas deste programa
         const selTur = f[`turmas_${prog}`] || [];
+        
+        // FILTRAGEM ATUALIZADA COM HIDDEN SET
         const rows = data.filter(d =>
           (f.clients || []).includes(d.client) &&
           d.program === prog &&
-          selTur.includes(d.turma)
+          selTur.includes(d.turma) &&
+          !hiddenSet.has(String(d.question).trim()) // <--- Filtro da blacklist
         );
+
         const pm = meta.titles.find(t => t.program_id === prog) || {};
 
         // hero
@@ -1270,14 +1298,13 @@
 
       const pages = Array.from(document.querySelectorAll('.page')).filter(pg => pg.dataset.deleted !== 'true' && pg.style.display !== 'none');
       
-      // MELHORIA: scale aumentado de 2 para 3 (ou usa 4 para máxima qualidade)
       const images = await Promise.all(pages.map(pg =>
         html2canvas(pg, { 
           backgroundColor:'#fff', 
           useCORS:true, 
-          scale: 3,           // Era 2, agora é 3 para maior qualidade
-          logging: false,     // Desliga logs para melhor performance
-          imageTimeout: 0     // Sem timeout para imagens
+          scale: 3,
+          logging: false,
+          imageTimeout: 0
         }).then(cnv => cnv.toDataURL('image/jpeg', 0.75))
       ));
 
@@ -1317,12 +1344,11 @@
       const allPages = Array.from(document.querySelectorAll('.page')).filter(pg => pg.dataset.deleted !== 'true' && pg.style.display !== 'none');
       await new Promise(r => setTimeout(r, 100));
       
-      // MELHORIA: scale fixo em 3, removida a condição que baixava para 1
       const dataUrls = await Promise.all(allPages.map(pg =>
         html2canvas(pg, { 
           backgroundColor:'#fff', 
           useCORS:true, 
-          scale: 3,           // Era 1 ou 2 condicional, agora é sempre 3
+          scale: 3,
           logging: false,
           imageTimeout: 0
         }).then(cnv => cnv.toDataURL('image/jpeg', 0.75))
