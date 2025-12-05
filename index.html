@@ -13,7 +13,7 @@
       --border: #dde5ec;
       --radius: 10px;
       --shadow-soft: 0 12px 30px rgba(15, 52, 67, 0.08);
-      --text-main: #123047;
+      --text-main: #123047; 
       --text-muted: #6b7a88;
       --red: #e74c3c;
     }
@@ -1213,35 +1213,49 @@
     }
 
     // ---------- Ver relatório ----------
-    function applyAndGo() {
-      const all = loadFilters();
+   function applyAndGo() {
+  const all = loadFilters();
 
-      if (all.clientInfos && Array.isArray(all.clientInfos)) {
-        all.clientInfos = all.clientInfos.filter(info =>
-          !IGNORED_NORMALIZED.has(normalizeQuestion(info))
-        );
+  // 1) DEBUG: ver o que vai ANTES da limpeza
+  console.log('ANTES DA LIMPEZA clientInfos:', all.clientInfos);
+
+  // 2) Remover perguntas ignoradas (usando a lista normalizada)
+  if (all.clientInfos && Array.isArray(all.clientInfos)) {
+    all.clientInfos = all.clientInfos.filter(info =>
+      !IGNORED_NORMALIZED.has(normalizeQuestion(info))
+    );
+  }
+
+  // 3) DEBUG: ver o que fica DEPOIS da limpeza
+  console.log('DEPOIS DA LIMPEZA clientInfos:', all.clientInfos);
+
+  // 4) Limpar coisas de programas inativos
+  const activePrograms = all.programs || [];
+
+  Object.keys(all).forEach(key => {
+    if (key.startsWith('turmas_')) {
+      const prog = key.replace('turmas_', '');
+      if (!activePrograms.includes(prog)) {
+        delete all[key];
       }
-
-      const activePrograms = all.programs || [];
-
-      Object.keys(all).forEach(key => {
-        if (key.startsWith('turmas_')) {
-          const prog = key.replace('turmas_', '');
-          if (!activePrograms.includes(prog)) delete all[key];
-        }
-      });
-
-      ['trainers', 'starts', 'ends'].forEach(field => {
-        if (all[field]) {
-          Object.keys(all[field]).forEach(prog => {
-            if (!activePrograms.includes(prog)) delete all[field][prog];
-          });
-        }
-      });
-
-      localStorage.setItem('reportFilters', JSON.stringify(all));
-      window.location.href = 'report.html';
     }
+  });
+
+  ['trainers', 'starts', 'ends'].forEach(field => {
+    if (all[field]) {
+      Object.keys(all[field]).forEach(prog => {
+        if (!activePrograms.includes(prog)) {
+          delete all[field][prog];
+        }
+      });
+    }
+  });
+
+  // 5) Guardar filtros limpos e seguir para o report
+  localStorage.setItem('reportFilters', JSON.stringify(all));
+  window.location.href = 'report.html';
+}
+
 
     // ---------- INIT ----------
     function renderAll() {
