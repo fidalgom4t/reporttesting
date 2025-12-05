@@ -165,7 +165,6 @@
     }
     .btn-ghost:hover { background: var(--primary-soft); }
 
-    /* Blocos dinâmicos (Formador / Início / Fim / Turmas) */
     #dynamicBlocks {
       margin-top: 18px;
       display: flex;
@@ -233,7 +232,6 @@
 
     .dynamic-block input[type="checkbox"] { margin-right: 4px; }
 
-    /* Barra inferior */
     .footer-bar {
       margin-top: 18px;
       background: rgba(255, 255, 255, 0.85);
@@ -295,7 +293,6 @@
     }
     .btn-primary.enabled:hover { background: #006173; }
 
-    /* Painel arquivados */
     .archived-panel {
       position: fixed;
       left: 50%;
@@ -322,13 +319,6 @@
 
     .archived-list-group { margin-bottom: 6px; }
 
-    .archived-list-group strong {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
-
     .archived-tags {
       margin-top: 4px;
       display: flex;
@@ -351,7 +341,6 @@
       font-weight: bold;
     }
 
-    /* Custom Modal/Message Box */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -441,7 +430,6 @@
     </header>
 
     <div class="grid">
-      <!-- CLIENTES -->
       <section class="card" id="card-clients">
         <div class="card-header">
           <span class="card-title">Cliente</span>
@@ -450,7 +438,6 @@
         <div class="list" id="clientList"></div>
       </section>
 
-      <!-- PROGRAMAS -->
       <section class="card" id="card-programs">
         <div class="card-header">
           <span class="card-title">Programas</span>
@@ -460,7 +447,6 @@
         <div class="list" id="programList"></div>
       </section>
 
-      <!-- INFOS -->
       <section class="card" id="card-infos">
         <div class="card-header">
           <span class="card-title">Data / Info</span>
@@ -471,10 +457,8 @@
       </section>
     </div>
 
-    <!-- Blocos dinâmicos por programa -->
     <div id="dynamicBlocks"></div>
 
-    <!-- Barra inferior -->
     <div class="footer-bar">
       <div class="footer-left">
         <div class="pill-archived" id="btnToggleArchivedPill">
@@ -490,11 +474,9 @@
       </div>
     </div>
 
-    <!-- Painel de arquivados -->
     <div id="archivedPanel" class="archived-panel">
       <h4>Itens arquivados</h4>
 
-      <!-- filtro por cliente -->
       <div style="margin-bottom:8px; display:flex; gap:6px; align-items:center;">
         <input
           id="archivedFilter"
@@ -510,7 +492,6 @@
       </p>
     </div>
 
-    <!-- Custom Modal UI (Confirmação e Mensagem) -->
     <div id="customModal" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-title" id="modalTitle"></div>
@@ -522,10 +503,7 @@
   </div>
 
   <script>
-    // ====================================================
-    // CUSTOM MODAL (Substitui alert() e confirm())
-    // ====================================================
-
+    // ---------- Modal ----------
     function showModal(title, message, type, onConfirm) {
       const modal = document.getElementById('customModal');
       const modalTitle = document.getElementById('modalTitle');
@@ -562,36 +540,31 @@
         modalButtons.appendChild(okBtn);
       }
 
-      setTimeout(() => {
-        modal.classList.add('active');
-      }, 10);
+      setTimeout(() => modal.classList.add('active'), 10);
     }
+    function customAlert(t, m){ showModal(t,m,'alert'); }
+    function customConfirm(t,m,cb){ showModal(t,m,'confirm',cb); }
 
-    function customAlert(title, message) {
-      showModal(title, message, 'alert');
-    }
-
-    function customConfirm(title, message, callback) {
-      showModal(title, message, 'confirm', callback);
-    }
-
-    // ====================================================
-    // CONFIG: URL do Apps Script
-    // ====================================================
+    // ---------- Config ----------
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz54-DuWj1knZ4eoreDANYPOzbtRMqeFtxt1NV2vi3u0QLuDbi4mt66bNOgeSJstWKWJA/exec';
 
-    // ====================================================
-    // LISTA DINÂMICA (PERGUNTAS A IGNORAR, lidas de Google Sheets)
-    // ====================================================
     let PERGUNTAS_IGNORADAS = [];
+    let IGNORED_NORMALIZED = new Set();
 
-    // ⚠️ TROCAR SEU_SHEET_ID_AQUI PELO ID DA TUA GOOGLE SHEET
+    // TROCAR PELO ID CERTO
     const IGNORE_SHEET_URL =
-      'https://docs.google.com/spreadsheets/d/1_qerJ1KMP-I_NHznb4xavecZ3Kb1ql1mf2bWD8ONcTfp4rCuK27KNStU/gviz/tq?sheet=IGNORAR_PERGUNTAS&range=A2:A';
+      'https://docs.google.com/spreadsheets/d/1g2lbCnewCwGHcwEBev-9n4y-CqK8fc2u7eAzXq0ViDU/gviz/tq?sheet=IGNORAR_PERGUNTAS&range=A2:A';
 
-    // ====================================================
-    // ESTADO
-    // ====================================================
+    function normalizeQuestion(q) {
+      return (q || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+
     let data = [];
     let archived = { clients: {}, programs: {}, infos: {} };
 
@@ -602,18 +575,13 @@
       localStorage.setItem('filters', JSON.stringify(f));
     }
 
-    // ====================================================
-    // APPS SCRIPT: GET / SET ARQUIVADOS
-    // ====================================================
+    // ---------- Apps Script arquivados ----------
     async function loadArchivedState() {
       const isValidUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('http');
+      if (!isValidUrl) return { clients: {}, programs: {}, infos: {} };
 
-      if (!isValidUrl) {
-        console.warn('APPS_SCRIPT_URL inválida ou não definida. A usar estado arquivado vazio.');
-        return { clients: {}, programs: {}, infos: {} };
-      }
       try {
-        const res = await fetch(APPS_SCRIPT_URL + '?action=getArchived', { method: 'GET' });
+        const res = await fetch(APPS_SCRIPT_URL + '?action=getArchived');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const j = await res.json();
         return {
@@ -622,8 +590,8 @@
           infos: j.infos || {}
         };
       } catch (err) {
-        console.warn('Erro ao carregar estado arquivado, a usar vazio:', err);
-        customAlert('Erro de Comunicação', 'Não foi possível carregar o estado de arquivados do Apps Script. A utilizar listas completas (não arquivadas).');
+        console.warn('Erro loadArchived:', err);
+        customAlert('Erro de Comunicação','Não foi possível carregar o estado de arquivados.');
         return { clients: {}, programs: {}, infos: {} };
       }
     }
@@ -631,7 +599,6 @@
     async function saveArchivedState() {
       const isValidUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('http');
       if (!isValidUrl) return;
-
       try {
         await fetch(APPS_SCRIPT_URL + '?action=setArchived', {
           method: 'POST',
@@ -639,50 +606,35 @@
           body: JSON.stringify(archived)
         });
       } catch (err) {
-        console.warn('Erro ao gravar estado arquivado:', err);
-        customAlert('Erro de Gravação', 'Não foi possível guardar o estado de arquivados no Apps Script.');
+        console.warn('Erro saveArchived:', err);
+        customAlert('Erro de Gravação','Não foi possível guardar o estado de arquivados.');
       }
     }
 
-    // ====================================================
-    // GOOGLE SHEETS: CARREGAR PERGUNTAS A IGNORAR
-    // ====================================================
+    // ---------- Google Sheet: perguntas a ignorar ----------
     async function loadIgnoredQuestionsFromSheet() {
-      if (!IGNORE_SHEET_URL) {
-        console.warn('IGNORE_SHEET_URL não definida; PERGUNTAS_IGNORADAS fica vazia.');
-        return [];
-      }
-
+      if (!IGNORE_SHEET_URL) return [];
       try {
         const res = await fetch(IGNORE_SHEET_URL);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-
         const text = await res.text();
         const jsonStart = text.indexOf('{');
         const jsonEnd = text.lastIndexOf('}');
-        if (jsonStart === -1 || jsonEnd === -1) {
-          console.warn('Resposta inesperada da gviz:', text.slice(0, 200));
-          return [];
-        }
-
+        if (jsonStart === -1 || jsonEnd === -1) return [];
         const jsonStr = text.substring(jsonStart, jsonEnd + 1);
         const obj = JSON.parse(jsonStr);
-
         const rows = (obj.table && obj.table.rows) || [];
         const list = rows
           .map(r => r.c && r.c[0] && r.c[0].v ? String(r.c[0].v).trim() : '')
           .filter(v => v !== '');
-
         return list;
       } catch (err) {
-        console.warn('Erro a carregar perguntas a ignorar da Google Sheet:', err);
+        console.warn('Erro a carregar IGNORAR_PERGUNTAS:', err);
         return [];
       }
     }
 
-    // ====================================================
-    // RENDER LISTAS
-    // ====================================================
+    // ---------- Render listas ----------
     function getCurrentClient() {
       const f = loadFilters();
       return (f.clients || [])[0] || null;
@@ -691,15 +643,12 @@
     function renderClients() {
       const list = document.getElementById('clientList');
       list.innerHTML = '';
-
       const f = loadFilters();
       const selected = f.clients || [];
-
       const clients = [...new Set(data.map(r => r.client))].sort();
 
       clients.forEach(client => {
         if (archived.clients[client]) return;
-
         const item = document.createElement('div');
         item.className = 'item';
 
@@ -713,11 +662,7 @@
 
         cb.onchange = () => {
           const filters = loadFilters();
-          if (cb.checked) {
-            filters.clients = [client];
-          } else {
-            filters.clients = [];
-          }
+          filters.clients = cb.checked ? [client] : [];
           filters.programs = [];
           filters.clientInfos = [];
           for (const key in filters) {
@@ -726,7 +671,6 @@
             }
           }
           saveFilters(filters);
-
           renderAll();
         };
 
@@ -750,7 +694,6 @@
     function renderPrograms() {
       const list = document.getElementById('programList');
       list.innerHTML = '';
-
       const client = getCurrentClient();
       if (!client) return;
 
@@ -788,7 +731,6 @@
           }
           filters.programs = [...set];
           saveFilters(filters);
-
           renderInfos();
           refreshDynamic();
           updateViewReportButton();
@@ -828,7 +770,8 @@
       )].sort();
 
       infos.forEach(info => {
-        if (archived.infos[`${client}|${info}`] || PERGUNTAS_IGNORADAS.includes(info)) return;
+        const norm = normalizeQuestion(info);
+        if (archived.infos[`${client}|${info}`] || IGNORED_NORMALIZED.has(norm)) return;
 
         const item = document.createElement('div');
         item.className = 'item';
@@ -848,7 +791,6 @@
           else set.delete(info);
           filters.clientInfos = [...set];
           saveFilters(filters);
-
           refreshDynamic();
           updateViewReportButton();
         };
@@ -870,9 +812,7 @@
       });
     }
 
-    // ====================================================
-    // BOTÕES “Selecionar todos”
-    // ====================================================
+    // ---------- Selecionar todos ----------
     function selectAllPrograms() {
       const client = getCurrentClient();
       if (!client) return;
@@ -897,7 +837,6 @@
       }
 
       saveFilters(f);
-
       renderPrograms();
       renderInfos();
       refreshDynamic();
@@ -915,25 +854,22 @@
       const infos = [...new Set(
         data.filter(r => r.client === client && programs.includes(r.program))
             .map(r => r.client_info)
-      )].sort().filter(info =>
-        !archived.infos[`${client}|${info}`] &&
-        !PERGUNTAS_IGNORADAS.includes(info)
-      );
+      )].sort().filter(info => {
+        const norm = normalizeQuestion(info);
+        return !archived.infos[`${client}|${info}`] && !IGNORED_NORMALIZED.has(norm);
+      });
 
       const allSelected = infos.length &&
         infos.every(i => (f.clientInfos || []).includes(i));
 
       f.clientInfos = allSelected ? [] : infos;
       saveFilters(f);
-
       renderInfos();
       refreshDynamic();
       updateViewReportButton();
     }
 
-    // ====================================================
-    // BLOCO DINÂMICO
-    // ====================================================
+    // ---------- Dinâmico / turmas ----------
     function createInputField(labelText, program, key) {
       const f = loadFilters();
       const container = document.createElement('div');
@@ -1072,18 +1008,14 @@
       refreshDynamic();
     }
 
-    // ====================================================
-    // ARQUIVAR / DESARQUIVAR
-    // ====================================================
+    // ---------- Arquivar ----------
     function archiveClient(client) {
       customConfirm(
         'Confirmação de Arquivamento',
-        `Tem a certeza que deseja arquivar o cliente "${client}"? Ele será escondido das listas.`,
+        `Tem a certeza que deseja arquivar o cliente "${client}"?`,
         (confirmed) => {
           if (!confirmed) return;
-
           archived.clients[client] = true;
-
           const f = loadFilters();
           if ((f.clients || [])[0] === client) {
             f.clients = [];
@@ -1091,7 +1023,6 @@
             f.clientInfos = [];
             saveFilters(f);
           }
-
           renderAll();
           updateArchivedUI();
           saveArchivedState();
@@ -1102,16 +1033,13 @@
     function archiveProgram(client, program) {
       customConfirm(
         'Confirmação de Arquivamento',
-        `Tem a certeza que deseja arquivar o programa "${program}" para o cliente "${client}"?`,
+        `Tem a certeza que deseja arquivar o programa "${program}"?`,
         (confirmed) => {
           if (!confirmed) return;
-
           archived.programs[`${client}|${program}`] = true;
-
           const f = loadFilters();
           f.programs = (f.programs || []).filter(p => p !== program);
           saveFilters(f);
-
           renderPrograms();
           renderInfos();
           refreshDynamic();
@@ -1124,16 +1052,13 @@
     function archiveInfo(client, info) {
       customConfirm(
         'Confirmação de Arquivamento',
-        `Tem a certeza que deseja arquivar a info "${info}" para o cliente "${client}"?`,
+        `Tem a certeza que deseja arquivar a info "${info}"?`,
         (confirmed) => {
           if (!confirmed) return;
-
           archived.infos[`${client}|${info}`] = true;
-
           const f = loadFilters();
           f.clientInfos = (f.clientInfos || []).filter(i => i !== info);
           saveFilters(f);
-
           renderInfos();
           refreshDynamic();
           updateArchivedUI();
@@ -1148,14 +1073,12 @@
       updateArchivedUI();
       saveArchivedState();
     }
-
     function unarchiveProgram(client, program) {
       delete archived.programs[`${client}|${program}`];
       renderPrograms();
       updateArchivedUI();
       saveArchivedState();
     }
-
     function unarchiveInfo(client, info) {
       delete archived.infos[`${client}|${info}`];
       renderInfos();
@@ -1163,9 +1086,6 @@
       saveArchivedState();
     }
 
-    // ====================================================
-    // UI ARQUIVADOS
-    // ====================================================
     function updateArchivedUI() {
       const clientsArchived = Object.keys(archived.clients);
       const programsArchived = Object.keys(archived.programs);
@@ -1177,33 +1097,25 @@
 
       const content = document.getElementById('archivedContent');
       content.innerHTML = '';
-
       if (total === 0) {
         content.textContent = 'Nenhum item arquivado.';
         return;
       }
 
       const grouped = {};
-
       clientsArchived.forEach(c => {
         if (!grouped[c]) grouped[c] = { clientArchived: false, programs: [], infos: [] };
         grouped[c].clientArchived = true;
       });
-
       programsArchived.forEach(key => {
         const [client, program] = key.split('|');
         if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
-        if (!grouped[client].programs.includes(program)) {
-          grouped[client].programs.push(program);
-        }
+        if (!grouped[client].programs.includes(program)) grouped[client].programs.push(program);
       });
-
       infosArchived.forEach(key => {
         const [client, info] = key.split('|');
         if (!grouped[client]) grouped[client] = { clientArchived: false, programs: [], infos: [] };
-        if (!grouped[client].infos.includes(info)) {
-          grouped[client].infos.push(info);
-        }
+        if (!grouped[client].infos.includes(info)) grouped[client].infos.push(info);
       });
 
       const filterInput = document.getElementById('archivedFilter');
@@ -1253,15 +1165,14 @@
         block.appendChild(header);
 
         if (hasPrograms) {
-          const labelProg = document.createElement('div');
-          labelProg.style.fontSize = '11px';
-          labelProg.style.color = 'var(--text-muted)';
-          labelProg.textContent = 'Programas:';
-          block.appendChild(labelProg);
+          const lp = document.createElement('div');
+          lp.style.fontSize = '11px';
+          lp.style.color = 'var(--text-muted)';
+          lp.textContent = 'Programas:';
+          block.appendChild(lp);
 
           const tagsProg = document.createElement('div');
           tagsProg.className = 'archived-tags';
-
           g.programs.forEach(program => {
             const tag = document.createElement('span');
             tag.className = 'tag';
@@ -1269,21 +1180,19 @@
             tag.querySelector('span').onclick = () => unarchiveProgram(client, program);
             tagsProg.appendChild(tag);
           });
-
           block.appendChild(tagsProg);
         }
 
         if (hasInfos) {
-          const labelInfo = document.createElement('div');
-          labelInfo.style.fontSize = '11px';
-          labelInfo.style.color = 'var(--text-muted)';
-          labelInfo.style.marginTop = '4px';
-          labelInfo.textContent = 'Infos / Datas:';
-          block.appendChild(labelInfo);
+          const li = document.createElement('div');
+          li.style.fontSize = '11px';
+          li.style.color = 'var(--text-muted)';
+          li.style.marginTop = '4px';
+          li.textContent = 'Infos / Datas:';
+          block.appendChild(li);
 
           const tagsInfo = document.createElement('div');
           tagsInfo.className = 'archived-tags';
-
           g.infos.forEach(info => {
             const tag = document.createElement('span');
             tag.className = 'tag';
@@ -1291,7 +1200,6 @@
             tag.querySelector('span').onclick = () => unarchiveInfo(client, info);
             tagsInfo.appendChild(tag);
           });
-
           block.appendChild(tagsInfo);
         }
 
@@ -1304,51 +1212,38 @@
       panel.classList.toggle('visible');
     }
 
-    // ====================================================
-    // VER RELATÓRIO
-    // ====================================================
+    // ---------- Ver relatório ----------
     function applyAndGo() {
       const all = loadFilters();
 
-      // 1. Remover perguntas explicitamente ignoradas
       if (all.clientInfos && Array.isArray(all.clientInfos)) {
         all.clientInfos = all.clientInfos.filter(info =>
-          !PERGUNTAS_IGNORADAS.includes(info)
+          !IGNORED_NORMALIZED.has(normalizeQuestion(info))
         );
       }
 
-      // 2. Remover turmas, formadores e datas de programas inativos
       const activePrograms = all.programs || [];
 
       Object.keys(all).forEach(key => {
         if (key.startsWith('turmas_')) {
           const prog = key.replace('turmas_', '');
-          if (!activePrograms.includes(prog)) {
-            delete all[key];
-          }
+          if (!activePrograms.includes(prog)) delete all[key];
         }
       });
 
       ['trainers', 'starts', 'ends'].forEach(field => {
         if (all[field]) {
           Object.keys(all[field]).forEach(prog => {
-            if (!activePrograms.includes(prog)) {
-              delete all[field][prog];
-            }
+            if (!activePrograms.includes(prog)) delete all[field][prog];
           });
         }
       });
 
-      // 3. Guardar filtros limpos
       localStorage.setItem('reportFilters', JSON.stringify(all));
-
-      // 4. Redirecionar para o relatório
       window.location.href = 'report.html';
     }
 
-    // ====================================================
-    // INIT
-    // ====================================================
+    // ---------- INIT ----------
     function renderAll() {
       renderClients();
       renderPrograms();
@@ -1363,35 +1258,31 @@
         data = await response.json();
       } catch (err) {
         console.error('Erro a carregar data.json:', err);
-        customAlert('Erro de Carregamento', 'Não foi possível carregar o ficheiro de dados (data.json). Verifique o caminho ou o conteúdo.');
+        customAlert('Erro de Carregamento','Não foi possível carregar o ficheiro de dados (data.json).');
         return;
       }
 
       archived = await loadArchivedState();
       PERGUNTAS_IGNORADAS = await loadIgnoredQuestionsFromSheet();
-      console.log('PERGUNTAS_IGNORADAS carregadas da Sheet:', PERGUNTAS_IGNORADAS);
+      IGNORED_NORMALIZED = new Set(PERGUNTAS_IGNORADAS.map(normalizeQuestion));
+      console.log('PERGUNTAS_IGNORADAS:', PERGUNTAS_IGNORADAS);
 
       renderAll();
       updateArchivedUI();
 
       document.getElementById('btnSelectAllPrograms').onclick = selectAllPrograms;
       document.getElementById('btnSelectAllInfos').onclick = selectAllInfos;
-
       document.getElementById('btnToggleArchived').onclick = toggleArchivedPanel;
       document.getElementById('btnToggleArchivedPill').onclick = toggleArchivedPanel;
-
       document.getElementById('viewReport').onclick = applyAndGo;
 
       const filter = document.getElementById('archivedFilter');
-      if (filter) {
-        filter.addEventListener('input', updateArchivedUI);
-      }
+      if (filter) filter.addEventListener('input', updateArchivedUI);
 
       document.addEventListener('click', (e) => {
         const panel = document.getElementById('archivedPanel');
         const toggleBtn = document.getElementById('btnToggleArchived');
         const togglePill = document.getElementById('btnToggleArchivedPill');
-
         if (!panel.classList.contains('visible')) return;
         if (!panel.contains(e.target) && !toggleBtn.contains(e.target) && !togglePill.contains(e.target)) {
           panel.classList.remove('visible');
